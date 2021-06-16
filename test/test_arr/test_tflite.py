@@ -12,7 +12,7 @@ pyskynet.start()
 arr, = pyskynet.test("""
         local ns = require "numsky"
         local tflite = require "tflite"
-        local buf = (io.open("detect.tflite")):read("*a")
+        local buf = (io.open("../../src/unity/xor.tflite")):read("*a")
         local interpreter = tflite.interpreter(buf)
         interpreter:allocate_tensors()
         for i=1,#interpreter.input_tensors do

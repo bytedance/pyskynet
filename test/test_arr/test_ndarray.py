@@ -15,7 +15,7 @@ arr = pyskynet.test("""
         print(arr)
         for i=1,3 do
             for j=1,3 do
-                arr[ns.islice(i)(j)] = i + j
+                arr[{i,j}] = i + j
             end
         end
         print(arr, arr.dtype, arr.dtype.name)

@@ -11,10 +11,16 @@ pyskynet.start()
 
 arr, = pyskynet.test("""
         ns = require "numsky"
-        local assert_expr = (require "utils").assert_expr
+        local assert_expr = function(expr, g)
+            if load("return "..expr, "temp", "t", setmetatable(g or {},{__index=_G}))() then
+                print(expr, "ok")
+            else
+                print(expr, "test failed")
+            end
+        end
         assert_expr("ns.int16.char == 'h'")
         assert_expr("ns.int8(259) == 259-256")
-        assert_expr("ns.bool(0) == false")
+        assert_expr("ns.bool(nil) == false")
         for k,v in pairs(getmetatable(ns.bool)) do
             if type(k) == "number" then
                 assert_expr("string.char(k) == v.char", {v=v,k=k})

@@ -11,13 +11,8 @@ pyskynet.start()
 
 arr, = pyskynet.test("""
         local ns = require "numsky"
-        local slice = ns.s(1,2,3)
+        local slice = ns.slice(1,2)
         print(slice)
-        for i=1, #slice do
-            print(slice:get(i))
-            slice:set(i, 2,2,2)
-            print(slice:get(i))
-        end
         return 0
 """)
 
