@@ -7,3 +7,9 @@
 [submodule "3rd/lua-rapidjson"]
 	path = 3rd/lua-rapidjson
 	url = https://github.com/xpol/lua-rapidjson.git
+[submodule "3rd/lua-5.3"]
+	path = 3rd/lua-5.3
+	url = https://github.com/lua/lua.git
+[submodule "3rd/nn_libs"]
+	path = 3rd/nn_libs
+	url = https://github.com/drinkwithwater/nn_libs
