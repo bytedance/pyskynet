@@ -1,0 +1,9 @@
+[submodule "skynet"]
+	path = skynet
+	url = https://github.com/cloudwu/skynet.git
+[submodule "3rd/lua-protobuf"]
+	path = 3rd/lua-protobuf
+	url = https://github.com/starwing/lua-protobuf.git
+[submodule "3rd/lua-rapidjson"]
+	path = 3rd/lua-rapidjson
+	url = https://github.com/xpol/lua-rapidjson.git

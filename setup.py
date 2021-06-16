@@ -180,7 +180,7 @@ def main():
             author="cz",
             author_email="chenze.3057@bytedance.com",
             description="PySkynet is a library for using skynet in python.",
-            ext_modules=cython_extensions + lua_extensions + create_3rd_extensions() + create_tflite_extensions(),
+            ext_modules=cython_extensions + lua_extensions + create_3rd_extensions(),
             cmdclass={"build_ext": build_ext_rename},
             packages=["pyskynet", "skynet"],
             package_data={
