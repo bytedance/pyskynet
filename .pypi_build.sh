@@ -1,6 +1,8 @@
 
 # docker : quay.io/pypa/manylinux2010_x86_64
-python setup.py sdist bdist_wheel
+for PY in "python3.6" "python3.7" "python3.8" ; do
+	$PY setup.py sdist bdist_wheel
+done
 
 cd dist
 for k in `ls | grep whl$` ;  do
@@ -14,4 +16,4 @@ rm -rf wheelhouse
 
 cd ..
 
-python -m twine upload -repository pypi dist/*
+python3.6 -m twine upload --repository pypi dist/*

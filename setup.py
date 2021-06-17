@@ -211,8 +211,8 @@ def main():
             install_requires=[
                 "cffi ~= 1.14.2",
                 "gevent >= 20.6.0",
+                "numpy >= 1.18.0",
                 # "Cython ~= 0.29.21",
-                # "numpy >= 1.19.0",
             ],
             python_requires='>=3.6',
         )
