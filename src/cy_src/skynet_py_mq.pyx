@@ -31,6 +31,7 @@ def crecv():
 
 # see lsend in lua-skynet.c
 def csend(py_dst, int type_id, py_session, py_msg, py_size=None):
+    assert skynet_py_address() > 0, "skynet threads has not been started yet, call 'pyskynet.start()' first."
     # 1. check dst
     cdef char * dstname = NULL
     cdef int dst = 0

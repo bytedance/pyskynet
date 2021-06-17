@@ -1,7 +1,7 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
-local mAddressToName = {}
+local mAddressToName = {[0]="0"}
 local mNameToService = {}
 
 local MSG_REPEAT = 10

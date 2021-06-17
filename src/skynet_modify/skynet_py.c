@@ -122,6 +122,8 @@ void skynet_py_init(int (*p_uv_async_send)(void *), void * p_uv_async_t){
 	G_SKYNET_PY.uv_async_send = p_uv_async_send;
 	G_SKYNET_PY.uv_async_handle = p_uv_async_t;
 	G_SKYNET_PY.uv_async_busy = 0;
+	G_SKYNET_PY.holder_context = NULL;
+	G_SKYNET_PY.holder_address = 0;
 
 	SPIN_INIT(q);
 
@@ -135,4 +137,9 @@ void skynet_py_init(int (*p_uv_async_send)(void *), void * p_uv_async_t){
 	luaL_initcodecache();
 #endif
 
+}
+
+// if pyholder not started, return 0
+uint32_t skynet_py_address() {
+	return G_SKYNET_PY.holder_address;
 }

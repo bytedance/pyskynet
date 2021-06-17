@@ -56,6 +56,7 @@ void skynet_py_init(int (*p_uv_async_send)(void *), void * p_uv_async_t);
 void skynet_py_start(struct skynet_config * config);
 void skynet_py_wakeup();
 void skynet_py_exit();
+uint32_t skynet_py_address();
 
 /* function for env */
 void skynet_py_setlenv(const char *key, const char *value_str, size_t sz);

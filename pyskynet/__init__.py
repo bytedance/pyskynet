@@ -28,9 +28,9 @@ pyskynet.rawcall = pyskynet_proto.rawcall
 pyskynet.rawsend = pyskynet_proto.rawsend
 pyskynet.ret = pyskynet_proto.ret
 
-#######################
-# env setter & getter #
-#######################
+#################
+# env set & get #
+#################
 
 
 def getenv(key):
@@ -42,7 +42,8 @@ def getenv(key):
 
 
 def setenv(key, value):
-    assert getenv(key) is None, "Can't setenv exist key : %s " % key
+    if skynet_py_main.self() != 0:
+        assert getenv(key) is None, "Can't setenv exist key : %s " % key
     msg_ptr, msg_size = foreign_seri.remotepack(value)
     skynet_py_main.py_setenv(key, msg_ptr, msg_size)
     foreign_seri.trash(msg_ptr, msg_size)
@@ -104,7 +105,9 @@ def canvas(script, name="unknowxml"):
 
 
 def self():
-    return ".python"
+    address = skynet_py_main.self()
+    assert address > 0, "service pyholder not start "
+    return address
 
 
 def test(script, *args):

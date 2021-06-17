@@ -1,9 +1,9 @@
 #include "skynet.h"
 #include "skynet_env.h"
 #include "spinlock.h"
+#include "skynet_py.h"
 
 #include <lua.h>
-#include <Python.h>
 #include <lauxlib.h>
 
 #include <stdlib.h>
@@ -38,11 +38,12 @@ void skynet_py_setlenv(const char *key, const char *value_str, size_t sz) {
 
 	lua_State *L = E->L;
 	lua_getglobal(L, key);
-	if(lua_isnil(L, -1)) {
+	if(lua_isnil(L, -1) || skynet_py_address() == 0) {
 		lua_pop(L, 1);
 		lua_pushlstring(L, value_str, sz);
 		lua_setglobal(L,key);
 	} else {
+		skynet_error(NULL, "can't set existed env after pyskynet start\n");
 		lua_pop(L, 1);
 	}
 

@@ -60,4 +60,5 @@ cdef extern from "skynet_modify/skynet_py.h":
     void skynet_py_init(int (*p_uv_async_send)(void *), void * p_uv_async_t);
     void skynet_py_start(skynet_config * config)
     void skynet_py_exit();
+    uint32_t skynet_py_address();
 
