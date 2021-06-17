@@ -6,6 +6,7 @@ from Cython.Build import cythonize
 import numpy as np
 import os
 import sys
+import re
 
 
 def list_path(path, suffix, exclude_files=[]):
@@ -172,11 +173,18 @@ class build_ext_purec(build_ext):
         return os.path.join(*ext_path) + ".so"
 
 
+def get_version():
+    with open("pyskynet/__init__.py") as fo:
+        data = fo.read()
+        result = re.search(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', data)
+        return result.group(1)
+
+
 def main():
     build_skynet()
     setup(
             name="pyskynet",
-            version="0.0.3",
+            version=get_version(),
             author="cz",
             author_email="chenze.3057@bytedance.com",
             description="PySkynet is a library for using skynet in python.",
