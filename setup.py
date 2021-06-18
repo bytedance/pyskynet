@@ -1,9 +1,8 @@
 
 from distutils.command.build_ext import build_ext
+from distutils.command.build import build
 from setuptools import Extension, setup
 
-from Cython.Build import cythonize
-import numpy as np
 import os
 import sys
 import re
@@ -43,18 +42,56 @@ else:
     TFLITE_LIB = "3rd/nn_libs/tflite/lib/win/tensorflow-lite.lib"
     raise Exception("no build config for platform %s" % sys.platform)
 
-INCLUDE_DIRS = [SKYNET_SRC_PATH, LUA_PATH, np.get_include(), "./src", "./src/c_src", "./skynet/lualib-src"]
+INCLUDE_DIRS = [SKYNET_SRC_PATH, LUA_PATH, "./src", "./src/c_src", "./skynet/lualib-src"]
 
 
-def build_skynet():
-    MYCFLAGS = []
-    for k, v in MACROS:
-        MYCFLAGS.append("-D"+k)
-    MYCFLAGS = " ".join(MYCFLAGS)
-    if sys.platform == "linux":
-        os.system("cd skynet;MYCFLAGS='%s' make linux"%MYCFLAGS)
-    elif sys.platform == "darwin":
-        os.system("cd skynet;MYCFLAGS='%s' make macosx"%MYCFLAGS)
+def create_skynet_extensions():
+    SKYNET_CSERVICES = ["snlua", "logger", "gate", "harbor"]
+    ext_cservices = []
+    for cservice in SKYNET_CSERVICES:
+        ext = Extension('skynet.cservice.'+cservice,
+            include_dirs=INCLUDE_DIRS,
+            sources=['skynet/service-src/service_'+cservice+'.c'],
+            define_macros=MACROS,
+            extra_objects=[])
+        ext_cservices.append(ext)
+    clib_skynet_src = ["lua-skynet.c",
+                "lua-seri.c",
+                "lua-socket.c",
+                "lua-mongo.c",
+                "lua-netpack.c",
+                "lua-memory.c",
+                "lua-multicast.c",
+                "lua-cluster.c",
+                "lua-crypt.c",
+                "lsha1.c",
+                "lua-sharedata.c",
+                "lua-stm.c",
+                "lua-debugchannel.c",
+                "lua-datasheet.c",
+                "lua-sharetable.c"]
+    ext_skynet = Extension('skynet.luaclib.skynet',
+        include_dirs=INCLUDE_DIRS,
+        define_macros=MACROS,
+        sources=["skynet/lualib-src/" + s for s in clib_skynet_src],
+        extra_objects=[])
+    ext_lpeg = Extension('skynet.luaclib.lpeg',
+        include_dirs=[LUA_PATH, "skynet/3rd/lpeg"],
+        sources=list_path("skynet/3rd/lpeg", ".c"),
+        define_macros=MACROS,
+        extra_objects=[])
+    ext_md5 = Extension('skynet.luaclib.md5',
+        include_dirs=[LUA_PATH, "skynet/3rd/lua-md5"],
+        sources=list_path("skynet/3rd/lua-md5", ".c"),
+        define_macros=MACROS,
+        extra_objects=[])
+    ext_bson = Extension('skynet.luaclib.bson',
+        include_dirs=[SKYNET_SRC_PATH, LUA_PATH, "skynet/lualib-src/lua-bson"],
+        sources=["skynet/lualib-src/lua-bson.c"],
+        define_macros=MACROS,
+        extra_objects=[])
+    return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson]
+
 
 def create_cython_extensions():
     ext_main = Extension('pyskynet.skynet_py_main',
@@ -64,6 +101,7 @@ def create_cython_extensions():
                 list_path("src/skynet_modify", ".c") +
                 list_path("src/skynet_foreign", ".c", ["test.c"]) +
                 list_path(LUA_PATH, ".c", ["lua.c", "luac.c"]),
+        depends=['src/cy_src/skynet_py.pxd'],
         define_macros=MACROS,
         libraries=LIBRARIES,
         extra_objects=[])
@@ -71,12 +109,14 @@ def create_cython_extensions():
     ext_seri = Extension('pyskynet.skynet_py_foreign_seri',
         include_dirs=INCLUDE_DIRS,
         sources=['src/cy_src/skynet_py_foreign_seri.pyx'],
+        depends=['src/cy_src/skynet_py.pxd'],
         define_macros=MACROS,
         libraries=LIBRARIES)
 
     ext_mq = Extension('pyskynet.skynet_py_mq',
         include_dirs=INCLUDE_DIRS,
         sources=['src/cy_src/skynet_py_mq.pyx'],
+        depends=['src/cy_src/skynet_py.pxd'],
         define_macros=MACROS,
         libraries=LIBRARIES)
 
@@ -110,13 +150,7 @@ def create_lua_extensions():
         define_macros=MACROS,
         extra_compile_args=['-std=c++11'],
         libraries=LIBRARIES)
-    lua_drlua = Extension('pyskynet.lualib.drlua',
-        sources=["src/drlua/drlua.cpp"],
-        include_dirs=INCLUDE_DIRS,
-        define_macros=MACROS,
-        extra_compile_args=['-std=c++11'],
-        libraries=LIBRARIES)
-    return [lua_service_pyholder, lua_foreign_seri, lua_modify, lua_numsky, lua_drlua]
+    return [lua_service_pyholder, lua_foreign_seri, lua_modify, lua_numsky]
 
 
 def create_3rd_extensions():
@@ -141,28 +175,27 @@ def create_tflite_extensions():
     return [lua_tflite]
 
 
-cython_extensions = cythonize(create_cython_extensions())
-lua_extensions = create_lua_extensions()
+class build_with_numpy_cython(build):
+    def finalize_options(self):
+        super().finalize_options()
+        import numpy
+        for extension in self.distribution.ext_modules:
+            np_inc = numpy.get_include()
+            if not (np_inc in extension.include_dirs):
+                extension.include_dirs.append(np_inc)
+        from Cython.Build import cythonize
+        self.distribution.ext_modules = cythonize(self.distribution.ext_modules, language_level=3)
 
 
 class build_ext_rename(build_ext):
     def get_ext_filename(self, ext_name):
         ext_name_last = ext_name.split(".")[-1]
-        is_cy_ext = False
-        for cy_ext in cython_extensions:
-            if ext_name_last == cy_ext.name.split(".")[-1]:
-                is_cy_ext = True
-        is_lua_ext = not is_cy_ext
-        # for lua_ext in lua_extensions:
-        #    if ext_name_last == lua_ext.name.split(".")[-1]:
-        #        is_lua_ext = True
-        # if is_cy_ext and is_lua_ext:
-        #    raise Exception("ext_name duplicate error: %s" % ext_name)
-        # if not is_cy_ext and not is_lua_ext:
-        #    raise Exception("ext_name not found error: %s" % ext_name)
-        if is_cy_ext:
+        # cython library start with skynet_py
+        if ext_name_last.find("skynet_py_") == 0:
+            # for cython library
             return super().get_ext_filename(ext_name)
-        if is_lua_ext:
+        else:
+            # for lua library
             ext_path = ext_name.split('.')
             return os.path.join(*ext_path) + ".so"
 
@@ -181,15 +214,15 @@ def get_version():
 
 
 def main():
-    build_skynet()
     setup(
             name="pyskynet",
             version=get_version(),
             author="cz",
             author_email="chenze.3057@bytedance.com",
+            license='MIT',
             description="PySkynet is a library for using skynet in python.",
-            ext_modules=cython_extensions + lua_extensions + create_3rd_extensions(),
-            cmdclass={"build_ext": build_ext_rename},
+            ext_modules=create_skynet_extensions() + create_cython_extensions() + create_lua_extensions() + create_3rd_extensions(),
+            cmdclass={"build_ext": build_ext_rename, "build": build_with_numpy_cython},
             packages=["pyskynet", "skynet"],
             package_data={
                 "pyskynet": ["service/*",
@@ -211,10 +244,11 @@ def main():
             install_requires=[
                 "cffi ~= 1.14.2",
                 "gevent >= 20.6.0",
-                "numpy >= 1.18.0",
-                # "Cython ~= 0.29.21",
+                "numpy",
             ],
-            python_requires='>=3.6',
+            url='https://github.com/bytedance/pyskynet',
+            setup_requires=["cython", "numpy"],
+            python_requires='>=3.5',
         )
 
 
