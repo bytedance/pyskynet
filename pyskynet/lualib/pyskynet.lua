@@ -33,7 +33,7 @@ pyskynet.self = skynet.self
 local foreign_seri = require "pyskynet.foreign_seri"
 
 function pyskynet.getenv(k)
-	local data = pyskynet_modify.getenv(k)
+	local data = pyskynet_modify.getlenv(k)
 	return (foreign_seri.remoteunpack(data))
 end
 
@@ -42,7 +42,7 @@ function pyskynet.setenv(k, v)
 		assert(pyskynet.getenv(k) == nil, "Can't setenv exist key : " .. k)
 	end
 	local msg_ptr, msg_size = foreign_seri.remotepack(v)
-	local newkey = pyskynet_modify.setenv(k, msg_ptr, msg_size)
+	local newkey = pyskynet_modify.setlenv(k, msg_ptr, msg_size)
 	skynet.trash(msg_ptr, msg_size)
 	return newkey
 end

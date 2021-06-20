@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 static int
-lgetenv(lua_State *L) {
+lgetlenv(lua_State *L) {
     const char *key = luaL_checkstring(L, 1);
     size_t sz;
     const char *value = skynet_py_getlenv(key, &sz);
@@ -26,7 +26,7 @@ lgetenv(lua_State *L) {
 }
 
 static int
-lsetenv(lua_State *L) {
+lsetlenv(lua_State *L) {
     const char *key;
 	if(lua_isnil(L, 1)) {
 		key = NULL;
@@ -76,39 +76,10 @@ lnextenv(lua_State *L) {
     return 1;
 }
 
-static int
-lptr_unwrap(lua_State *L) {
-	const char * info = luaL_checkstring(L, 1);
-	void * ptr;
-	size_t sz;
-    sscanf(info, "%p,%ld", &ptr, &sz);
-	lua_pushlightuserdata(L, ptr);
-	lua_pushinteger(L, sz);
-    return 2;
-}
-
-static int
-lptr_wrap(lua_State *L) {
-	void * ptr;
-	size_t sz;
-	if (lua_type(L,1) == LUA_TLIGHTUSERDATA) {
-		ptr = lua_touserdata(L,1);
-		sz = luaL_checkinteger(L,2);
-	} else {
-		return luaL_error(L, "frominfo's first arg must be lightuserdata");
-	}
-    char addr[50];
-    sprintf(addr, "%p,%ld", ptr, sz);
-    lua_pushstring(L, addr);
-    return 1;
-}
-
 static const struct luaL_Reg l_methods[] = {
-    { "setenv", lsetenv},
-    { "getenv", lgetenv},
+    { "setlenv", lsetlenv},
+    { "getlenv", lgetlenv},
     { "nextenv", lnextenv},
-    { "ptr_wrap", lptr_wrap},
-    { "ptr_unwrap", lptr_unwrap},
     { NULL,  NULL },
 };
 

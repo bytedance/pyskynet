@@ -35,7 +35,7 @@ pyskynet.ret = pyskynet_proto.ret
 
 
 def getenv(key):
-    data = skynet_py_main.py_getenv(key)
+    data = skynet_py_main.getlenv(key)
     if data is None:
         return None
     else:
@@ -46,7 +46,7 @@ def setenv(key, value):
     if skynet_py_main.self() != 0:
         assert (key is None) or (getenv(key) is None), "Can't setenv exist key : %s " % key
     msg_ptr, msg_size = foreign_seri.remotepack(value)
-    newkey = skynet_py_main.py_setenv(key, msg_ptr, msg_size)
+    newkey = skynet_py_main.setlenv(key, msg_ptr, msg_size)
     foreign_seri.trash(msg_ptr, msg_size)
     return newkey
 
@@ -55,7 +55,7 @@ def envs():
     key = None
     re = {}
     while True:
-        key = skynet_py_main.py_nextenv(key)
+        key = skynet_py_main.nextenv(key)
         if(key is None):
             break
         else:

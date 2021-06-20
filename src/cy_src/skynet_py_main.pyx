@@ -36,21 +36,7 @@ cdef __check_bytes(s):
     else:
         raise Exception("type %s can't convert to bytes" % str(t))
 
-def ptr_wrap(capsule, size_t sz):
-    cdef void *ptr = PyCapsule_GetPointer(capsule, "cptr")
-    cdef char info[50];
-    cdef int k = sprintf(info, "%p,%ld", ptr, sz);
-    return info[:k].decode(encoding="utf-8")
-
-def ptr_unwrap(info):
-    if type(info) == str:
-        info = info.encode(encoding="utf-8")
-    cdef char* ptr
-    cdef size_t sz
-    sscanf(info, "%p,%ld", &ptr, &sz)
-    return PyCapsule_New(ptr, "cptr", NULL), sz
-
-def py_setenv(key, capsule_or_bytes, py_sz=None):
+def setlenv(key, capsule_or_bytes, py_sz=None):
     cdef size_t sz
     cdef const char *ptr
     if PyCapsule_CheckExact(capsule_or_bytes):
@@ -71,7 +57,7 @@ def py_setenv(key, capsule_or_bytes, py_sz=None):
     return addr[:k]
 
 
-def py_getenv(key):
+def getlenv(key):
     key = __check_bytes(key)
     cdef size_t sz
     cdef const char * value = skynet_py_getlenv(key, &sz);
@@ -80,7 +66,7 @@ def py_getenv(key):
     else:
         return None
 
-def py_nextenv(key):
+def nextenv(key):
     cdef const char * ptr
     if key is None:
         ptr = skynet_py_nextenv(NULL)
