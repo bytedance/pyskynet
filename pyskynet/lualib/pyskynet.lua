@@ -38,10 +38,13 @@ function pyskynet.getenv(k)
 end
 
 function pyskynet.setenv(k, v)
-	assert(pyskynet.getenv(k) == nil, "Can't setenv exist key : " .. k)
+	if k ~= nil then
+		assert(pyskynet.getenv(k) == nil, "Can't setenv exist key : " .. k)
+	end
 	local msg_ptr, msg_size = foreign_seri.remotepack(v)
-	pyskynet_modify.setenv(k, msg_ptr, msg_size)
+	local newkey = pyskynet_modify.setenv(k, msg_ptr, msg_size)
 	skynet.trash(msg_ptr, msg_size)
+	return newkey
 end
 
 function pyskynet.envs()

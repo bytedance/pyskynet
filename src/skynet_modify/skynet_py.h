@@ -59,6 +59,6 @@ void skynet_py_exit();
 uint32_t skynet_py_address();
 
 /* function for env */
-void skynet_py_setlenv(const char *key, const char *value_str, size_t sz);
+void *skynet_py_setlenv(const char *key, const char *value_str, size_t sz);
 const char *skynet_py_getlenv(const char *key, size_t *sz);
 const char *skynet_py_nextenv(const char *key);

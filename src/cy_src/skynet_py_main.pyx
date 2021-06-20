@@ -11,7 +11,7 @@ cdef extern from "skynet_env.h":
     const char * skynet_getenv(const char *key);
 
 cdef extern from "skynet_modify/skynet_py.h":
-    void skynet_py_setlenv(const char *key, const char *value_str, size_t sz)
+    void *skynet_py_setlenv(const char *key, const char *value_str, size_t sz)
     const char *skynet_py_getlenv(const char *key, size_t *sz);
     const char *skynet_py_nextenv(const char *key)
 
@@ -51,7 +51,6 @@ def ptr_unwrap(info):
     return PyCapsule_New(ptr, "cptr", NULL), sz
 
 def py_setenv(key, capsule_or_bytes, py_sz=None):
-    key = __check_bytes(key)
     cdef size_t sz
     cdef const char *ptr
     if PyCapsule_CheckExact(capsule_or_bytes):
@@ -62,7 +61,15 @@ def py_setenv(key, capsule_or_bytes, py_sz=None):
         sz = len(capsule_or_bytes)
     else:
         raise Exception("skynet_py env value must be bytes or pointer")
-    skynet_py_setlenv(key, ptr, sz)
+    if not (key is None):
+        key = __check_bytes(key)
+        skynet_py_setlenv(key, ptr, sz)
+        return None
+    cdef void *newkey = skynet_py_setlenv(NULL, ptr, sz)
+    cdef char addr[32];
+    cdef int k = sprintf(addr, "%p", newkey)
+    return addr[:k]
+
 
 def py_getenv(key):
     key = __check_bytes(key)

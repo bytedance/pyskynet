@@ -44,10 +44,11 @@ def getenv(key):
 
 def setenv(key, value):
     if skynet_py_main.self() != 0:
-        assert getenv(key) is None, "Can't setenv exist key : %s " % key
+        assert (key is None) or (getenv(key) is None), "Can't setenv exist key : %s " % key
     msg_ptr, msg_size = foreign_seri.remotepack(value)
-    skynet_py_main.py_setenv(key, msg_ptr, msg_size)
+    newkey = skynet_py_main.py_setenv(key, msg_ptr, msg_size)
     foreign_seri.trash(msg_ptr, msg_size)
+    return newkey
 
 
 def envs():

@@ -27,26 +27,38 @@ lgetenv(lua_State *L) {
 
 static int
 lsetenv(lua_State *L) {
-    const char *key = luaL_checkstring(L, 1);
+    const char *key;
+	if(lua_isnil(L, 1)) {
+		key = NULL;
+	} else {
+		key = luaL_checkstring(L, 1);
+	}
+	const char *newkey = NULL;
     size_t sz;
     const char *value;
     int t2 = lua_type(L,2);
     switch (t2) {
     case LUA_TSTRING: {
 		value = lua_tolstring(L, 2, &sz);
-		skynet_py_setlenv(key, value, sz);
+		newkey = skynet_py_setlenv(key, value, sz);
 		break;
 	 }
     case LUA_TLIGHTUSERDATA: {
 	    value = lua_touserdata(L, 2);
 	    sz = luaL_checkinteger(L, 3);
-	    skynet_py_setlenv(key, value, sz);
+	    newkey = skynet_py_setlenv(key, value, sz);
 	    break;
 	 }
     default:
 	    luaL_error(L, "setlenv invalid param %s", lua_typename(L,t2));
     }
-    return 0;
+	if(key != NULL) {
+		return 0;
+	}
+    char addr[32];
+    sprintf(addr, "%p", newkey);
+    lua_pushstring(L, addr);
+	return 1;
 }
 
 static int
