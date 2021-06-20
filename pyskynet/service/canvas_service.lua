@@ -1,13 +1,11 @@
 local foreign_seri = require "pyskynet.foreign_seri"
 local ns = require "numsky"
 local skynet = require "skynet"
+local pyskynet = require "pyskynet"
 local foreign = require "pyskynet.foreign"
-local pyskynet_modify = require "pyskynet.modify"
 
-local info, file_name = ...
-local msg_ptr, msg_size = pyskynet_modify.ptr_unwrap(info)
-local script = foreign_seri.remoteunpack(msg_ptr, msg_size)
-skynet.trash(msg_ptr, msg_size)
+local script_addr, file_name = ...
+local script = pyskynet.getenv(script_addr)
 
 local canv = ns.canvas(script, file_name)
 
@@ -25,6 +23,6 @@ function CMD.exit()
 	skynet.exit()
 end
 
-skynet.start(function()
+pyskynet.start(function()
 	foreign.dispatch(CMD)
 end)

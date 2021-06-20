@@ -74,13 +74,17 @@ function pyskynet.uniqueservice(...)
 	return skynet.uniqueservice(...)
 end
 
-function pyskynet.fileservice(...)
-    return pyskynet.newservice("fast_service", "file", ...)
-end
-
-function pyskynet.scriptservice(script, ...)
-	local info = pyskynet_modify.ptr_wrap(foreign_seri.remotepack(script))
-	return pyskynet.newservice("fast_service", "script", info, ...)
+function pyskynet.scriptservice(scriptaddr_or_loadargs, ...)
+    local t1 = type(scriptaddr_or_loadargs)
+    local scriptaddr
+    if t1 == "string" and scriptaddr_or_loadargs:find("0x") == 1 then
+        scriptaddr = scriptaddr_or_loadargs
+    elseif t1 == "string" then
+        scriptaddr = pyskynet.setenv(nil, {scriptaddr_or_loadargs})
+    elseif t1 == "table" then
+        scriptaddr = pyskynet.setenv(nil, scriptaddr_or_loadargs)
+    end
+	return pyskynet.newservice("script_service", scriptaddr, ...)
 end
 
 return pyskynet

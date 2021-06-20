@@ -69,22 +69,30 @@ def envs():
 def newservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "newservice's name must be str or bytes"
     for arg in args:
-        assert type(arg) == str or type(service_name) == bytes, "newservice's arg must be str or bytes"
+        assert type(arg) == str or type(arg) == bytes, "newservice's arg must be str or bytes"
     return pyskynet_proto.call(".launcher", PTYPE_LUA, "LAUNCH", "snlua", service_name, *args)[0]
 
 
 def uniqueservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "uniqueservice's name must be str or bytes"
     for arg in args:
-        assert type(arg) == str or type(service_name) == bytes, "uniqueservice's arg must be str or bytes"
+        assert type(arg) == str or type(arg) == bytes, "uniqueservice's arg must be str or bytes"
     return pyskynet_proto.call(".service", PTYPE_LUA, "LAUNCH", service_name, *args)[0]
 
-def fileservice(filename, *args):
-    return newservice("fast_service", "file", filename, *args)
 
-def scriptservice(script, *args):
-    info = skynet_py_main.ptr_wrap(*foreign_seri.remotepack(script))
-    return newservice("fast_service", "script", info, *args)
+def scriptservice(scriptaddr_or_loadargs, *args):
+    t1 = type(scriptaddr_or_loadargs)
+    if t1 == str and scriptaddr_or_loadargs.startswith("0x"):
+        scriptaddr = scriptaddr_or_loadargs
+    elif t1 == bytes and scriptaddr_or_loadargs.startswith(b"0x"):
+        scriptaddr = scriptaddr_or_loadargs
+    elif t1 == str or t1 == bytes:
+        scriptaddr = setenv(None, [scriptaddr_or_loadargs])
+    elif t1 == list:
+        scriptaddr = setenv(None, scriptaddr_or_loadargs)
+    else:
+        raise Exception("loadservice's first args must be str or bytes or list")
+    return newservice("script_service", scriptaddr, *args)
 
 
 class __CanvasService(object):
@@ -102,8 +110,8 @@ class __CanvasService(object):
 
 
 def canvas(script, name="unknowxml"):
-    info = skynet_py_main.ptr_wrap(*foreign_seri.remotepack(script))
-    return __CanvasService(newservice("canvas_service", info, name))
+    scriptaddr = setenv(None, script)
+    return __CanvasService(newservice("canvas_service", scriptaddr, name))
 
 
 def self():

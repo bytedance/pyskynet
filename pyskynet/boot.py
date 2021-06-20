@@ -140,7 +140,9 @@ def main():
         import pyskynet
         start()
         try:
-            pyskynet.fileservice(args.script, *args.args)
+            with open(args.script) as fo:
+                script = fo.read()
+            pyskynet.scriptservice(script, *args.args)
             join()
         except pyskynet.proto.PySkynetCallException as err:
             print(err)

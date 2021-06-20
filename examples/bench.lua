@@ -3,7 +3,7 @@ local socket = require "skynet.socket"
 local pyskynet = require "pyskynet"
 local foreign = require "pyskynet.foreign"
 
-local mode = ...
+local scriptaddr, mode = ...
 
 if mode == "client" then
 
@@ -18,8 +18,8 @@ skynet.start(function()
 			  end
 			  if line == "PING" then
 				 --local temp = foreign.fromstring("rewrwekljrwjklrjweklrjwerlw")
-				 local temp = "rewrwekljrwjklrjweklrjwerlw"
-				 skynet.call(".python", "foreign", sth)
+				 --local temp = "rewrwekljrwjklrjweklrjwerlw"
+				 --skynet.call(".python", "foreign", sth)
 				 socket.write(fd, "+PONG\r\n")
 			  end
 		   end
@@ -33,7 +33,7 @@ elseif mode == "server" then
     skynet.start(function()
 	    local agent = {}
 	    for i= 1, 20 do
-		    agent[i] = pyskynet.fileservice("bench.lua", "client")
+		    agent[i] = pyskynet.scriptservice(scriptaddr, "client")
 	    end
 	    local balance = 1
 	    local id = socket.listen("0.0.0.0", 10114)
