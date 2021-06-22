@@ -142,7 +142,7 @@ def main():
         try:
             with open(args.script) as fo:
                 script = fo.read()
-            pyskynet.scriptservice(script, *args.args)
+            pyskynet.scriptservice([script, args.script], *args.args)
             join()
         except pyskynet.proto.PySkynetCallException as err:
             print(err)
