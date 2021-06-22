@@ -50,7 +50,7 @@ void *skynet_py_setlenv(const char *key, const char *value_str, size_t sz) {
 			lua_pushlstring(L, value_str, sz);
 			lua_setglobal(L, key);
 		} else {
-			skynet_error(NULL, "can't set existed env after pyskynet start\n");
+			printf("can't set existed env after pyskynet start\n");
 			lua_pop(L, 1);
 		}
 	}
@@ -110,6 +110,8 @@ const char *skynet_getenv(const char *key) {
 			} else if(cookie == 4) {
 				return buffer + 5;
 			}
+		} else {
+			printf("pyskynet getenv but format error \n");
 		}
 		return NULL;
 	}

@@ -90,7 +90,13 @@ def create_skynet_extensions():
         sources=["skynet/lualib-src/lua-bson.c"],
         define_macros=MACROS,
         extra_objects=[])
-    return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson]
+    ext_ltls = Extension('skynet.luaclib.ltls',
+        include_dirs=[SKYNET_SRC_PATH, LUA_PATH, "skynet/lualib-src/ltls"],
+        sources=["skynet/lualib-src/ltls.c"],
+        libraries=["ssl"],
+        define_macros=MACROS,
+        extra_objects=[])
+    return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson, ext_ltls]
 
 
 def create_cython_extensions():

@@ -139,6 +139,12 @@ skynet.start(function()
     -- 3. service_mgr, .service
     skynet.newservice "service_mgr"
 
+	local service = require "skynet.service"
+	service.new("ltls_holder", function ()
+		local c = require "ltls.init.c"
+		c.constructor()
+	end)
+
     -- 4. wakeup .python
     core.send(".python", 0, 0, skynet.pack(skynet.self()))
 end)
