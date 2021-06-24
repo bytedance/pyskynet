@@ -99,19 +99,19 @@ def create_skynet_extensions():
         search_path = ["/usr", "/usr/local", "/usr/local/opt"]
     ssl_found = False
     for path in search_path:
-        if os.path.isfile(path+"/include/openssl/ssh.h"):
+        if os.path.isfile(path+"/include/openssl/ssl.h"):
             tls_library_dirs.append(path+"/lib")
             tls_include_dirs.append(path+"/include")
             ssl_found = True
             break
     if not ssl_found:
         if not SSL:
-            raise Exception("ssl not found, please set ssl path by environment variable 'SSL' manually.")
+            raise Exception("'openssl/ssl.h' not found, maybe set ssl path manually by 'SSL' environment variable?")
         else:
             raise Exception("ssl not found in directory " + str(SSL))
     ext_ltls = Extension('skynet.luaclib.ltls',
         include_dirs=tls_include_dirs,
-        library_dirs=tls_include_dirs,
+        library_dirs=tls_library_dirs,
         sources=["skynet/lualib-src/ltls.c"],
         libraries=["ssl"],
         define_macros=MACROS,
