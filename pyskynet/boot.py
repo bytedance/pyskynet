@@ -146,6 +146,7 @@ def main():
             join()
         except pyskynet.proto.PySkynetCallException as err:
             print(err)
+            gevent.sleep(1)
         except KeyboardInterrupt:
             return
     else:
