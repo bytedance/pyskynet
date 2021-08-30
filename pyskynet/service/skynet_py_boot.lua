@@ -139,12 +139,19 @@ skynet.start(function()
     -- 3. service_mgr, .service
     skynet.newservice "service_mgr"
 
-	local service = require "skynet.service"
-	service.new("ltls_holder", function ()
-		local c = require "ltls.init.c"
-		c.constructor()
-	end)
-
     -- 4. wakeup .python
-    core.send(".python", 0, 0, skynet.pack(skynet.self()))
+
+	local service = require "skynet.service"
+	local has_ltls = pcall(require, "ltls.init.c")
+	if has_ltls then
+		service.new("ltls_holder", function ()
+			local c = require "ltls.init.c"
+			c.constructor()
+		end)
+	end
+	core.send(".python", 0, 0, skynet.pack(skynet.self()))
+	if not has_ltls then
+		skynet.error("ltls_holder not created, can't use wss or https")
+	end
+
 end)

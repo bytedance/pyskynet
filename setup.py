@@ -2,6 +2,8 @@
 from distutils.command.build_ext import build_ext
 from distutils.command.build import build
 from setuptools import Extension, setup
+import setuptools.command.install
+import setuptools.command.develop
 
 import os
 import sys
@@ -90,11 +92,13 @@ def create_skynet_extensions():
         sources=["skynet/lualib-src/lua-bson.c"],
         define_macros=MACROS,
         extra_objects=[])
+    return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson]
+
+def create_skynet_extensions_ltls(ssl=False):
     tls_library_dirs=[]
     tls_include_dirs=[SKYNET_SRC_PATH, LUA_PATH, "skynet/lualib-src/ltls"]
-    SSL = os.getenv("SSL")
-    if SSL:
-        search_path = [SSL, "/usr", "/usr/local", "/usr/local/opt"]
+    if ssl and type(ssl) == str:
+        search_path = [ssl, "/usr", "/usr/local", "/usr/local/opt"]
     else:
         search_path = ["/usr", "/usr/local", "/usr/local/opt"]
     ssl_found = False
@@ -105,19 +109,20 @@ def create_skynet_extensions():
             ssl_found = True
             break
     if not ssl_found:
-        if not SSL:
-            raise Exception("'openssl/ssl.h' not found, maybe set ssl path manually by 'SSL' environment variable?")
+        if ssl:
+            raise Exception("'openssl/ssl.h' not found")
         else:
-            raise Exception("ssl not found in directory " + str(SSL))
-    ext_ltls = Extension('skynet.luaclib.ltls',
-        include_dirs=tls_include_dirs,
-        library_dirs=tls_library_dirs,
-        sources=["skynet/lualib-src/ltls.c"],
-        libraries=["ssl"],
-        define_macros=MACROS,
-        extra_objects=[])
-    return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson, ext_ltls]
-
+            print("'openssl/ssl.h' not found, skynet/luaclib/ltls.so not installed")
+        return []
+    else:
+        ext_ltls = Extension('skynet.luaclib.ltls',
+            include_dirs=tls_include_dirs,
+            library_dirs=tls_library_dirs,
+            sources=["skynet/lualib-src/ltls.c"],
+            libraries=["ssl"],
+            define_macros=MACROS,
+            extra_objects=[])
+        return [ext_ltls]
 
 def create_cython_extensions():
     ext_main = Extension('pyskynet.skynet_py_main',
@@ -187,7 +192,10 @@ def create_3rd_extensions():
         sources=list_path("3rd/lua-rapidjson/src", ".cpp"),
         extra_compile_args=["-std=c++11"],
         include_dirs=["3rd/lua-rapidjson/src", "3rd/lua-rapidjson/rapidjson/include", LUA_PATH, "3rd/"])
-    return [lua_pb, lua_rapidjson]
+    #lua_unqlite = Extension('pyskynet.lualib.unqlite',
+    #    sources=["src/c_src/lua-unqlite.cpp", "3rd/unqlite/unqlite.c"],
+    #    include_dirs=["3rd/unqlite/"]+INCLUDE_DIRS)
+    return [lua_pb, lua_rapidjson] #, lua_unqlite]
 
 
 def create_tflite_extensions():
@@ -200,10 +208,15 @@ def create_tflite_extensions():
         extra_objects=[TFLITE_LIB])
     return [lua_tflite]
 
+install_opts = {
+        "ssl":False,
+        "tflite":False,
+        }
 
 class build_with_numpy_cython(build):
     def finalize_options(self):
         super().finalize_options()
+        self.distribution.ext_modules=create_skynet_extensions() + create_cython_extensions() + create_lua_extensions() + create_3rd_extensions() + create_skynet_extensions_ltls(install_opts["ssl"])
         import numpy
         for extension in self.distribution.ext_modules:
             np_inc = numpy.get_include()
@@ -226,10 +239,39 @@ class build_ext_rename(build_ext):
             return os.path.join(*ext_path) + ".so"
 
 
-class build_ext_purec(build_ext):
-    def get_ext_filename(self, ext_name):
-        ext_path = ext_name.split('.')
-        return os.path.join(*ext_path) + ".so"
+#class build_ext_purec(build_ext):
+#    def get_ext_filename(self, ext_name):
+#        ext_path = ext_name.split('.')
+#        return os.path.join(*ext_path) + ".so"
+
+
+class CommandMixin(object):
+    user_options = [
+        ('ssl=', None, 'build with ssl'),
+        ('tflite', None, 'build with tflite'),
+    ]
+
+    def initialize_options(self):
+        super().initialize_options()
+        # Initialize options
+        self.ssl = False
+        self.tflite = False
+
+    def finalize_options(self):
+        super().finalize_options()
+
+    def run(self):
+        # Use options
+        install_opts["ssl"] = self.ssl
+        install_opts["tflite"] = self.tflite
+        super().run()
+
+
+class InstallCommand(CommandMixin, setuptools.command.install.install):
+    user_options = getattr(setuptools.command.install.install, 'user_options', []) + CommandMixin.user_options
+
+class DevelopCommand(CommandMixin, setuptools.command.develop.develop):
+    user_options = getattr(setuptools.command.develop.develop, 'user_options', []) + CommandMixin.user_options
 
 
 def get_version():
@@ -247,8 +289,8 @@ def main():
             author_email="chenze.3057@bytedance.com",
             license='MIT',
             description="PySkynet is a library for using skynet in python.",
-            ext_modules=create_skynet_extensions() + create_cython_extensions() + create_lua_extensions() + create_3rd_extensions(),
-            cmdclass={"build_ext": build_ext_rename, "build": build_with_numpy_cython},
+            ext_modules=[], # setted in build_with_numpy_cython
+            cmdclass={"build_ext": build_ext_rename, "build": build_with_numpy_cython, "install":InstallCommand, "develop":DevelopCommand},
             packages=["pyskynet", "skynet"],
             package_data={
                 "pyskynet": ["service/*",
