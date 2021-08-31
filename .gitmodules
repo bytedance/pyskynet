@@ -10,3 +10,6 @@
 [submodule "3rd/nn_libs"]
 	path = 3rd/nn_libs
 	url = https://github.com/drinkwithwater/nn_libs
+[submodule "3rd/unqlite"]
+	path = 3rd/unqlite
+	url = https://github.com/symisc/unqlite.git

@@ -192,10 +192,10 @@ def create_3rd_extensions():
         sources=list_path("3rd/lua-rapidjson/src", ".cpp"),
         extra_compile_args=["-std=c++11"],
         include_dirs=["3rd/lua-rapidjson/src", "3rd/lua-rapidjson/rapidjson/include", LUA_PATH, "3rd/"])
-    #lua_unqlite = Extension('pyskynet.lualib.unqlite',
-    #    sources=["src/c_src/lua-unqlite.cpp", "3rd/unqlite/unqlite.c"],
-    #    include_dirs=["3rd/unqlite/"]+INCLUDE_DIRS)
-    return [lua_pb, lua_rapidjson] #, lua_unqlite]
+    lua_unqlite = Extension('pyskynet.lualib.unqlite',
+        sources=["src/c_src/lua-unqlite.cpp", "3rd/unqlite/unqlite.c"],
+        include_dirs=["3rd/unqlite/"]+INCLUDE_DIRS)
+    return [lua_pb, lua_rapidjson, lua_unqlite]
 
 
 def create_tflite_extensions():
