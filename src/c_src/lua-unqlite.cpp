@@ -58,7 +58,7 @@ namespace luabinding {
 				size_t keyLen = 0;
 				const char * key = luaL_checklstring(L, 2, &keyLen);
 				size_t valueLen = 0;
-				const char * value = luaL_checklstring(L, 3, &keyLen);
+				const char * value = luaL_checklstring(L, 3, &valueLen);
 				int rc = unqlite_kv_append(pDbExt->db,key,keyLen,value,valueLen);
 				if(rc != UNQLITE_OK) {
 					return luaL_error(L, "unqlite append failed %d", rc);
@@ -186,11 +186,9 @@ namespace luabinding {
             })
 		.setFieldFunction("valid", [](lua_State*L) -> int {
 				unqlite_cursor_ext *pCurExt = luabinding::ClassUtil<unqlite_cursor_ext>::check(L, 1);
-                int rc = unqlite_kv_cursor_valid_entry(pCurExt->cursor);
-                if(rc != UNQLITE_OK) {
-                    return luaL_error(L, "cursor valid error %d", rc);
-                }
-                return 0;
+                int result = unqlite_kv_cursor_valid_entry(pCurExt->cursor);
+				lua_pushboolean(L, result);
+                return 1;
             })
 		.setFieldFunction("next", [](lua_State*L) -> int {
 				unqlite_cursor_ext *pCurExt = luabinding::ClassUtil<unqlite_cursor_ext>::check(L, 1);
@@ -254,6 +252,46 @@ namespace luabinding {
 					pCurExt->buffer = NULL;
                 }
                 return 0;
+            })
+		.setMetaFunction("__call", [](lua_State*L) -> int {
+				unqlite_cursor_ext *pCurExt = luabinding::ClassUtil<unqlite_cursor_ext>::check(L, 1);
+				int rc;
+				if(lua_isnoneornil(L, 3)) {
+					rc = unqlite_kv_cursor_first_entry(pCurExt->cursor);
+					if(rc != UNQLITE_OK) {
+						return luaL_error(L, "cursor first error %d", rc);
+					}
+				} else {
+					rc = unqlite_kv_cursor_next_entry(pCurExt->cursor);
+					if(rc == SXERR_DONE) {
+						unqlite_kv_cursor_release(pCurExt->db, pCurExt->cursor);
+						delete [] pCurExt->buffer;
+						pCurExt->buffer = NULL;
+						return 0;
+					} else if(rc != UNQLITE_OK) {
+						return luaL_error(L, "cursor next error %d", rc);
+					}
+				}
+				int valid = unqlite_kv_cursor_valid_entry(pCurExt->cursor);
+				if(!valid) {
+					unqlite_kv_cursor_release(pCurExt->db, pCurExt->cursor);
+					delete [] pCurExt->buffer;
+					pCurExt->buffer = NULL;
+					return 0;
+				}
+				int keyLen = BUFFER_LENGTH;
+				rc = unqlite_kv_cursor_key(pCurExt->cursor, pCurExt->buffer, &keyLen);
+				if(rc != UNQLITE_OK) {
+					return luaL_error(L, "cursor get key failed %d", rc);
+				}
+				lua_pushlstring(L, pCurExt->buffer, keyLen);
+				unqlite_int64 valueLen = BUFFER_LENGTH;
+				rc = unqlite_kv_cursor_data(pCurExt->cursor, pCurExt->buffer, &valueLen);
+				if(rc != UNQLITE_OK) {
+					return luaL_error(L, "cursor get key failed %d", rc);
+				}
+				lua_pushlstring(L, pCurExt->buffer, valueLen);
+				return 2;
             });
     }
 
