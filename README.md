@@ -13,14 +13,14 @@ $ pip install pyskynet
 Install with specific ssl path.
 
 ~~~~sh
-$ pip install pyskynet --install-option="ssl=/path/to"
+$ pip install pyskynet --install-option="--ssl=/path/to"
 ~~~~
 
 In mac maybe:
 
 ~~~~sh
 $ brew install openssl
-$ pip install pyskynet --install-option="ssl=/usr/local/opt/openssl@1.1"
+$ pip install pyskynet --install-option="--ssl=/usr/local/opt/openssl@1.1"
 ~~~~
 
 ### Quick Start
