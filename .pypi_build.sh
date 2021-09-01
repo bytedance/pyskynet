@@ -1,6 +1,6 @@
 
 # docker : quay.io/pypa/manylinux2010_x86_64
-python3.8 setup.py sdist #bdist_wheel
+python3.6 setup.py sdist #bdist_wheel
 
 #cd dist
 #for k in `ls | grep whl$` ;  do

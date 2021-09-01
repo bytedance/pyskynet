@@ -20,6 +20,7 @@ lua_service = pyskynet.scriptservice("""
             return "lua pong"
         end)
         pyskynet.start(function()
+            local a = foreign.call(".python", "echo", "ewr")
         end)
 """)
 
