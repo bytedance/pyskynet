@@ -3,6 +3,7 @@ recursive-include 3rd/lua-protobuf *
 recursive-include 3rd/lua-rapidjson *
 recursive-include 3rd/rapidxml *
 recursive-include 3rd/TinyGL *
+recursive-include 3rd/unqlite *
 
 recursive-include src/cy_src *
 recursive-include src/c_src *
