@@ -22,7 +22,11 @@ foreign.unpack = assert(foreign_seri.unpack)
 
 foreign.CMD = setmetatable({}, {
 	__call=function(t, first, ...)
-		return t[first](...)
+		local f = t[first]
+		if not f then
+			error("cmd "..tostring(first).." not found")
+		end
+		return f(...)
 	end
 })
 
@@ -83,7 +87,7 @@ function foreign.call(addr, ...)
 end
 
 function foreign.send(addr, ...)
-	skynet.send(addr, PTYPE_FOREIGN, cmd, ...)
+	skynet.send(addr, PTYPE_FOREIGN, ...)
 end
 
 return foreign
