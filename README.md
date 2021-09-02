@@ -25,48 +25,52 @@ $ pip install pyskynet --install-option="--ssl=/usr/local/opt/openssl@1.1"
 
 ### Quick Start
 
+Call lua from python
+
 ```python
-    import pyskynet
-    import pyskynet.foreign as foreign
+import pyskynet
+import pyskynet.foreign as foreign
 
-    pyskynet.start()
+pyskynet.start()
 
-    lua_service = pyskynet.scriptservice("""
-            local pyskynet = require "pyskynet"
-            local foreign = require "pyskynet.foreign"
-            pyskynet.start(function()
-                foreign.dispatch("echo", function(a)
-                    print("[lua]arg from python:", a)
-                    return "lua pong"
-                end)
-            end)
-    """)
+lua_service = pyskynet.scriptservice("""
+		local pyskynet = require "pyskynet"
+		local foreign = require "pyskynet.foreign"
+		pyskynet.start(function()
+			foreign.dispatch("echo", function(a)
+				print("[lua]arg from python:", a)
+				return "lua pong"
+			end)
+		end)
+""")
 
-    lua_re = foreign.call(lua_service, "echo", "python ping")
-    print("[python]call lua return:", lua_re)
+lua_re = foreign.call(lua_service, "echo", "python ping")
+print("[python]call lua return:", lua_re)
 
-    pyskynet.join()
+pyskynet.join()
 ```
 
+Call python from lua
+
 ```python
-    import pyskynet
-    import pyskynet.foreign as foreign
+import pyskynet
+import pyskynet.foreign as foreign
 
-    pyskynet.start()
+pyskynet.start()
 
-    @foreign.dispatch("echo")
-    def echo(data):
-        print("[python]arg from lua:", data)
-        return "python pong"
+@foreign.dispatch("echo")
+def echo(data):
+	print("[python]arg from lua:", data)
+	return "python pong"
 
-    lua_service = pyskynet.scriptservice("""
-            local pyskynet = require "pyskynet"
-            local foreign = require "pyskynet.foreign"
-            pyskynet.start(function()
-                local a = foreign.call(".python", "echo", "rewrew")
-                print("[lua]return from python:", a)
-            end)
-    """)
+lua_service = pyskynet.scriptservice("""
+		local pyskynet = require "pyskynet"
+		local foreign = require "pyskynet.foreign"
+		pyskynet.start(function()
+			local a = foreign.call(".python", "echo", "rewrew")
+			print("[lua]return from python:", a)
+		end)
+""")
 
-    pyskynet.join()
+pyskynet.join()
 ```
