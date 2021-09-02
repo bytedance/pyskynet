@@ -25,10 +25,7 @@ $ pip install pyskynet --install-option="--ssl=/usr/local/opt/openssl@1.1"
 
 ### Quick Start
 
-Call lua from python
-
-.. code-block:: python
-
+```python
     import pyskynet
     import pyskynet.foreign as foreign
 
@@ -49,11 +46,9 @@ Call lua from python
     print("[python]call lua return:", lua_re)
 
     pyskynet.join()
+```
 
-Call python from lua
-
-.. code-block:: python
-
+```python
     import pyskynet
     import pyskynet.foreign as foreign
 
@@ -74,3 +69,4 @@ Call python from lua
     """)
 
     pyskynet.join()
+```
