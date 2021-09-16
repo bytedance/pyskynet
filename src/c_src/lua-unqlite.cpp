@@ -258,12 +258,17 @@ namespace luabinding {
 				int rc;
 				if(lua_isnoneornil(L, 3)) {
 					rc = unqlite_kv_cursor_first_entry(pCurExt->cursor);
-					if(rc != UNQLITE_OK) {
+					if(rc == UNQLITE_DONE) {
+						unqlite_kv_cursor_release(pCurExt->db, pCurExt->cursor);
+						delete [] pCurExt->buffer;
+						pCurExt->buffer = NULL;
+						return 0;
+					} else if(rc != UNQLITE_OK) {
 						return luaL_error(L, "cursor first error %d", rc);
 					}
 				} else {
 					rc = unqlite_kv_cursor_next_entry(pCurExt->cursor);
-					if(rc == SXERR_DONE) {
+					if(rc == UNQLITE_DONE) {
 						unqlite_kv_cursor_release(pCurExt->db, pCurExt->cursor);
 						delete [] pCurExt->buffer;
 						pCurExt->buffer = NULL;
