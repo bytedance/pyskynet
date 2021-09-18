@@ -5,9 +5,10 @@ recursive-include 3rd/rapidxml *
 recursive-include 3rd/TinyGL *
 recursive-include 3rd/unqlite *
 
+recursive-include 3rd/numsky *
+
 recursive-include src/cy_src *
 recursive-include src/c_src *
-recursive-include src/skynet_foreign *
 recursive-include src/skynet_modify *
 
 recursive-include skynet/3rd/lua *

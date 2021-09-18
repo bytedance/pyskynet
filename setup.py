@@ -44,7 +44,7 @@ else:
     TFLITE_LIB = "3rd/nn_libs/tflite/lib/win/tensorflow-lite.lib"
     raise Exception("no build config for platform %s" % sys.platform)
 
-INCLUDE_DIRS = [SKYNET_SRC_PATH, LUA_PATH, "./src", "./src/c_src", "./skynet/lualib-src"]
+INCLUDE_DIRS = [SKYNET_SRC_PATH, LUA_PATH, "./src", "./src/c_src", "./skynet/lualib-src", "3rd/numsky/src"]
 
 
 def create_skynet_extensions():
@@ -161,7 +161,7 @@ def create_lua_extensions():
         define_macros=MACROS,
         libraries=LIBRARIES)
     lua_foreign_seri = Extension('pyskynet.lualib.pyskynet.foreign_seri',
-        sources=['src/c_src/lua-foreign_seri.c'],
+        sources=['3rd/numsky/src/lua-foreign_seri.c'],
         include_dirs=INCLUDE_DIRS,
         define_macros=MACROS,
         libraries=LIBRARIES)
@@ -171,11 +171,11 @@ def create_lua_extensions():
         define_macros=MACROS,
         libraries=LIBRARIES)
     lua_numsky = Extension('pyskynet.lualib.numsky',
-        sources=list_path("src/c_src/numsky", ".cpp") +
-                list_path("src/c_src/numsky/ndarray", ".cpp") +
-                list_path("src/c_src/numsky/ufunc", ".cpp") +
-                list_path("src/c_src/numsky/canvas", ".cpp") +
-                list_path("src/c_src/numsky/tinygl", ".cpp") +
+        sources=list_path("3rd/numsky/src/numsky", ".cpp") +
+                list_path("3rd/numsky/src/numsky/ndarray", ".cpp") +
+                list_path("3rd/numsky/src/numsky/ufunc", ".cpp") +
+                list_path("3rd/numsky/src/numsky/canvas", ".cpp") +
+                list_path("3rd/numsky/src/numsky/tinygl", ".cpp") +
                 list_path("3rd/TinyGL/tinygl", ".cpp"),
         include_dirs=INCLUDE_DIRS + ["3rd/rapidxml", "3rd/TinyGL"],
         define_macros=MACROS,
