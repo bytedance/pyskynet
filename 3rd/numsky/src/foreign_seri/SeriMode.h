@@ -1,11 +1,10 @@
 
 #define LUA_LIB
 
-#include "skynet_foreign/skynet_foreign.h"
+extern "C" {
 #include "skynet_foreign/numsky.h"
+}
 
-#include <lua.h>
-#include <lauxlib.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
@@ -39,4 +38,4 @@ enum SeriMode {
 	MODE_LUA = 0,
 	MODE_FOREIGN = 1,
 	MODE_FOREIGN_REMOTE = 2,
-}
+};

@@ -1,6 +1,6 @@
-#include "foreign_seri/WriteBlock.h"
+#include "foreign_seri/LuaWriteBlock.h"
 
-void WriteBlock::wb_table_array(lua_State*L, int index, int depth) {
+int LuaWriteBlock::wb_table_array(int index, int depth) {
 	int array_size = lua_rawlen(L, index);
 	if (array_size >= MAX_COOKIE-1) {
 		uint8_t n = COMBINE_TYPE(TYPE_TABLE, MAX_COOKIE-1);
@@ -14,13 +14,13 @@ void WriteBlock::wb_table_array(lua_State*L, int index, int depth) {
 	int i;
 	for (i=1;i<=array_size;i++) {
 		lua_rawgeti(L,index,i);
-		pack_one(L, -1, depth);
+		pack_one(-1, depth);
 		lua_pop(L, 1);
 	}
 	return array_size;
 }
 
-void WriteBlock::wb_table_hash(lua_State*L, int index, int depth, int array_size) {
+void LuaWriteBlock::wb_table_hash(int index, int depth, int array_size) {
 	lua_pushnil(L);
 	while (lua_next(L, index) != 0) {
 		if (lua_type(L,-2) == LUA_TNUMBER) {
@@ -32,27 +32,49 @@ void WriteBlock::wb_table_hash(lua_State*L, int index, int depth, int array_size
 				}
 			}
 		}
-		pack_one(L,-2,depth);
-		pack_one(L,-1,depth);
+		pack_one(-2,depth);
+		pack_one(-1,depth);
 		lua_pop(L, 1);
 	}
 	wb_nil();
 }
 
-void WriteBlock::wb_table(lua_State*L, int index, int depth) {
+void LuaWriteBlock::wb_table(int index, int depth) {
 	luaL_checkstack(L, LUA_MINSTACK, NULL);
 	if (index < 0) {
 		index = lua_gettop(L) + index + 1;
 	}
 	if (luaL_getmetafield(L, index, "__pairs") != LUA_TNIL) {
-		wb_table_metapairs(L, index, depth);
+		wb_table_metapairs(index, depth);
 	} else {
-		int array_size = wb_table_array(L, index, depth);
-		wb_table_hash(L, index, depth, array_size);
+		int array_size = wb_table_array(index, depth);
+		wb_table_hash(index, depth, array_size);
 	}
 }
 
-void WriteBlock::pack_one(lua_State *L, int index, int depth) {
+void LuaWriteBlock::wb_table_metapairs(int index, int depth) {
+	uint8_t n = COMBINE_TYPE(TYPE_TABLE, 0);
+	push(&n, 1);
+	lua_pushvalue(L, index);
+	lua_call(L, 1, 3);
+	for(;;) {
+		lua_pushvalue(L, -2);
+		lua_pushvalue(L, -2);
+		lua_copy(L, -5, -3);
+		lua_call(L, 2, 2);
+		int type = lua_type(L, -2);
+		if (type == LUA_TNIL) {
+			lua_pop(L, 4);
+			break;
+		}
+		pack_one(-2, depth);
+		pack_one(-1, depth);
+		lua_pop(L, 1);
+	}
+	wb_nil();
+}
+
+void LuaWriteBlock::pack_one(int index, int depth) {
 	if (depth > MAX_DEPTH) {
 		free_buffer();
 		luaL_error(L, "serialize can't pack too depth table");
@@ -60,7 +82,7 @@ void WriteBlock::pack_one(lua_State *L, int index, int depth) {
 	int type = lua_type(L,index);
 	switch(type) {
 	case LUA_TNIL:
-		wb_nil(b);
+		wb_nil();
 		break;
 	case LUA_TNUMBER: {
 		if (lua_isinteger(L, index)) {
@@ -88,7 +110,7 @@ void WriteBlock::pack_one(lua_State *L, int index, int depth) {
 		if (index < 0) {
 			index = lua_gettop(L) + index + 1;
 		}
-		wb_table(L, index, depth+1);
+		wb_table(index, depth+1);
 		break;
 	}
 	case LUA_TUSERDATA: {
@@ -118,15 +140,7 @@ void WriteBlock::pack_one(lua_State *L, int index, int depth) {
 	}
 }
 
-void WriteBlock::pack_from(lua_State *L, int from) {
-	int n = lua_gettop(L) - from;
-	int i;
-	for (i=1;i<=n;i++) {
-		pack_one(L, from + i, 0);
-	}
-}
-
-void WriteBlock::wb_ns_arr(lua_State *L, struct numsky_ndarray *arr_obj) {
+void LuaWriteBlock::wb_ns_arr(struct numsky_ndarray *arr_obj) {
 	// 1. nd & type
 	uint8_t n = COMBINE_TYPE(TYPE_FOREIGN_USERDATA, arr_obj->nd);
 	push(&n, 1);

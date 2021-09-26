@@ -130,7 +130,7 @@ def create_cython_extensions():
         sources=['src/cy_src/skynet_py_main.pyx'] +
                 list_path(SKYNET_SRC_PATH, ".c", ["skynet_main.c", "skynet_start.c", "skynet_env.c"]) +
                 list_path("src/skynet_modify", ".c") +
-                list_path("src/skynet_foreign", ".c", ["test.c"]) +
+                list_path("3rd/numsky/src/skynet_foreign/", ".c") +
                 list_path(LUA_PATH, ".c", ["lua.c", "luac.c"]),
         depends=['src/cy_src/skynet_py.pxd'],
         define_macros=MACROS,
@@ -165,6 +165,12 @@ def create_lua_extensions():
         include_dirs=INCLUDE_DIRS,
         define_macros=MACROS,
         libraries=LIBRARIES)
+    #lua_seri_v2 = Extension('pyskynet.lualib.pyskynet.seri_v2',
+    #    sources=list_path('3rd/numsky/src/foreign_seri/', '.cpp'),
+    #    include_dirs=INCLUDE_DIRS,
+    #    define_macros=MACROS,
+    #    extra_compile_args=['-std=c++11'],
+    #    libraries=LIBRARIES)
     lua_modify = Extension('pyskynet.lualib.pyskynet.modify',
         sources=['src/c_src/lua-modify.c'],
         include_dirs=INCLUDE_DIRS,

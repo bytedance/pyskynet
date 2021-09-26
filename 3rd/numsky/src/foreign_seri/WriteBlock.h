@@ -1,15 +1,19 @@
 
+#pragma once
+
+#include "foreign_seri/SeriMode.h"
 #define BLOCK_SIZE 128
-#include "foreign_seri/seri_type.h"
 
 class WriteBlock {
-private:
+protected:
 	char *mBuffer;
 	int64_t mCapacity;
 	int64_t mLen;
 	SeriMode mMode;
 public:
-	WriteBlock(SeriMode vMode):mBuffer((char*)foreign_malloc(BLOCK_SIZE)), mCapacity(BLOCK_SIZE), mLen(0), mMode(vMode){}
+	WriteBlock(SeriMode vMode): mBuffer((char*)foreign_malloc(BLOCK_SIZE)), mCapacity(BLOCK_SIZE), mLen(0), mMode(vMode) {
+		// TODO use foreign_malloc or skynet_malloc ???
+	}
 	~WriteBlock() {
 		free_buffer();
 	}
@@ -19,20 +23,19 @@ public:
 			mBuffer = NULL;
 		}
 	}
-	void ret(lua_State*L) {
-	}
 	void push(const void* vData, int64_t vSize) {
 		int64_t newCapacity = mCapacity;
 		while(newCapacity < mLen + vSize) {
 			newCapacity += newCapacity / 2;
 		}
 		if(newCapacity != mCapacity) {
-			char *newBuffer = foreign_malloc(newCapacity);
+			char *newBuffer = reinterpret_cast<char*>(foreign_malloc(newCapacity));
 			memcpy(newBuffer, mBuffer, mLen);
 			foreign_free(mBuffer);
 			mBuffer = newBuffer;
 		}
 		memcpy(mBuffer + mLen, vData, vSize);
+		mLen += vSize;
 	}
 	void wb_nil() {
 		uint8_t n = TYPE_NIL;
@@ -118,11 +121,4 @@ public:
 		data = (uint8_t)v;
 		push(&data, 1);
 	}
-	void wb_table_array(lua_State*L, int index, int depth);
-	void wb_table_hash(lua_State*L, int index, int depth, int array_size);
-	void wb_table_metapairs(lua_State*L, int index, int depth);
-	void wb_table(lua_State*L, int index, int depth);
-	void wb_ns_arr(struct numsky_ndarray *arr_obj);
-	void pack_one(lua_State *L, int index, int depth);
-	void pack_from(lua_State *L, int from);
 };

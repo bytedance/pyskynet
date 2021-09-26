@@ -37,7 +37,7 @@ local pyskynet = require "pyskynet"
 local cluster = require "pyskynet.cluster"
 local foreign = require "pyskynet.foreign"
 
-local addr = tonumber(...)
+local addr = tonumber(select(2, ...))
 pyskynet.start(function()
     local remote_addr = "127.0.0.1:8081"
     local a = cluster.call(remote_addr, addr, "getbuf")
