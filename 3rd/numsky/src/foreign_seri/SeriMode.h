@@ -1,5 +1,5 @@
 
-#define LUA_LIB
+#pragma once
 
 extern "C" {
 #include "skynet_foreign/numsky.h"

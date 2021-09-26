@@ -5,9 +5,10 @@
 
 class LuaWriteBlock : WriteBlock {
 protected:
+	SeriMode mMode;
 	lua_State *L;
 public:
-	LuaWriteBlock(SeriMode vMode, lua_State *vL): WriteBlock(vMode), L(vL) {}
+	LuaWriteBlock(SeriMode vMode, lua_State *vL): WriteBlock(), mMode(vMode), L(vL) {}
 	void pack() {
 		int n = lua_gettop(L);
 		for (int i=1;i<=n;i++) {

@@ -1,5 +1,6 @@
 
 #include "foreign_seri/LuaWriteBlock.h"
+#include "foreign_seri/LuaReadBlock.h"
 
 template <SeriMode mode> int lpack(lua_State *L) {
 	LuaWriteBlock wb(mode, L);
@@ -7,10 +8,18 @@ template <SeriMode mode> int lpack(lua_State *L) {
 	return wb.ret();
 }
 
+template <SeriMode mode> int lunpack(lua_State *L) {
+	LuaReadBlock rb(mode, L);
+	return rb.unpack();
+}
+
 static const struct luaL_Reg l_methods[] = {
     { "luapack" , lpack<MODE_LUA>},
     { "pack", lpack<MODE_FOREIGN> },
     { "remotepack", lpack<MODE_FOREIGN_REMOTE> },
+    { "luaunpack" , lunpack<MODE_LUA>},
+    { "unpack", lunpack<MODE_FOREIGN> },
+    { "remoteunpack", lunpack<MODE_FOREIGN_REMOTE> },
     { NULL,  NULL },
 };
 

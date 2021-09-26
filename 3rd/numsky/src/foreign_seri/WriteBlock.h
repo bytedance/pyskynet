@@ -9,9 +9,8 @@ protected:
 	char *mBuffer;
 	int64_t mCapacity;
 	int64_t mLen;
-	SeriMode mMode;
 public:
-	WriteBlock(SeriMode vMode): mBuffer((char*)foreign_malloc(BLOCK_SIZE)), mCapacity(BLOCK_SIZE), mLen(0), mMode(vMode) {
+	WriteBlock(): mBuffer((char*)foreign_malloc(BLOCK_SIZE)), mCapacity(BLOCK_SIZE), mLen(0) {
 		// TODO use foreign_malloc or skynet_malloc ???
 	}
 	~WriteBlock() {
