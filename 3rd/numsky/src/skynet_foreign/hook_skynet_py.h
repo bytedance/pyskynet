@@ -19,6 +19,9 @@
 
 #else
 
+#define skynet_malloc malloc
+#define skynet_free free
+
 // spinlock do nothing
 #define SPIN_INIT(q)
 #define SPIN_LOCK(q)

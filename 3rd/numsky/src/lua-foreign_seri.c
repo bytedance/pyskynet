@@ -1,7 +1,5 @@
+#include "lua-serialize.c"
 
-#include "lua-seri.c"
-
-#include "skynet_foreign/skynet_foreign.h"
 #include "skynet_foreign/numsky.h"
 
 #define TYPE_FOREIGN_USERDATA 7
@@ -463,7 +461,7 @@ static const struct luaL_Reg l_methods[] = {
     { NULL,  NULL },
 };
 
-LUAMOD_API int
+LUA_API int
 luaopen_pyskynet_foreign_seri(lua_State *L) {
 	luaL_checkversion(L);
 
