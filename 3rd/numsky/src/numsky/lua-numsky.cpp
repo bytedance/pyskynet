@@ -36,21 +36,6 @@ extern "C" {
 		luabinding::ClassUtil<tinygl::Camera>::bind(L);
 	}
 
-	LUA_API bool lnumsky_isnsarr(lua_State*L, int stackPos) {
-		auto arr = luabinding::ClassUtil<numsky_ndarray>::test(L, stackPos);
-		if(arr == NULL) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	LUA_API npy_intp* lnumsky_shape(lua_State*L, int stackPos, size_t *nd) {
-		auto arr = luabinding::ClassUtil<numsky_ndarray>::check(L, stackPos);
-		nd[0] = arr->nd;
-		return arr->dimensions;
-	}
-
 	LUAMOD_API int luaopen_numsky_tinygl(lua_State *L) {
 
 		bindClass(L);

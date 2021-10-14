@@ -83,6 +83,24 @@ namespace numsky {
 		}
 	}
 
+	template <typename TArr, typename TBuffer> void ndarray_t_copyfrom(numsky_ndarray* arr, char *dataptr) {
+		auto iter = ndarray_nditer(arr);
+		for(npy_intp n=0;n<arr->count;n++) {
+			numsky::dataptr_cast<TArr>(iter->dataptr) = numsky::dataptr_cast<TBuffer>(dataptr);
+			dataptr += sizeof(TBuffer);
+			numsky_nditer_next(iter.get());
+		}
+	}
+
+	template <typename TArr, typename TBuffer> void ndarray_t_copyto(numsky_ndarray* arr, char *dataptr) {
+		auto iter = ndarray_nditer(arr);
+		for(npy_intp n=0;n<arr->count;n++) {
+			numsky::dataptr_cast<TBuffer>(dataptr) = numsky::dataptr_cast<TArr>(iter->dataptr);
+			dataptr += sizeof(TBuffer);
+			numsky_nditer_next(iter.get());
+		}
+	}
+
 	// axis : start from 0
     static inline void ndarray_axis_foreach(numsky_ndarray* arr, std::vector<int>& axis, const std::function<void(numsky_nditer*)> & func) {
 		auto sub_arr = ndarray_new_preinit<false>(nullptr, arr->nd - axis.size(), arr->dtype->typechar);
