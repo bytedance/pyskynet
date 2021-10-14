@@ -28,7 +28,7 @@
 #define SPIN_UNLOCK(q)
 #define SPIN_DESTROY(q)
 
-#define npy_intp long
+#define npy_intp int64_t
 
 // TODO not right...
 

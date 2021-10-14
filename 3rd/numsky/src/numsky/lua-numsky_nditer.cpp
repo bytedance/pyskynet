@@ -1,6 +1,5 @@
 #include "numsky/lua-numsky.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
-#include "numsky/lua-numsky_module.h"
 
 static int lnumsky_nditer__call(lua_State *L) {
 	auto iter = luabinding::ClassUtil<numsky_nditer>::check(L, 1);

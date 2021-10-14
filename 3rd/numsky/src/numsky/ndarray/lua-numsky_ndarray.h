@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 
 #define lnumsky_template_fp2t2(L, typechar1, T2, tfunc) ([] (lua_State* _L, char tc1) -> decltype(tfunc<bool, T2>)* { \
 decltype(tfunc<bool, T2>) * name = NULL;\

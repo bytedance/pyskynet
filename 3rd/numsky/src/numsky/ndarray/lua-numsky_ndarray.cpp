@@ -1,7 +1,6 @@
 #include <string>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/ufunc/lua-numsky_ufunc.h"
