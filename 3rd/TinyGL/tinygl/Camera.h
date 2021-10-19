@@ -6,10 +6,11 @@
 #include <string.h>
 #include <cmath>
 #include <assert.h>
-#include "tinygl/Screen.h"
-#include "tinygl/Transform.h"
-#include "tinygl/math.h"
-#include "tinygl/Mesh.h"
+
+#include "Screen.h"
+#include "Transform.h"
+#include "Mesh.h"
+#include "point.h"
 
 namespace tinygl {
 	class Camera : public Transform {

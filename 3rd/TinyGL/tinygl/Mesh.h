@@ -1,13 +1,14 @@
 
 #pragma once
 
-#include "tinygl/math.h"
-#include "tinygl/Screen.h"
-#include "tinygl/Shader.h"
-#include "tinygl/Transform.h"
 #include <vector>
 #include <functional>
 #include <memory>
+
+#include "point.h"
+#include "Screen.h"
+#include "Shader.h"
+#include "Transform.h"
 
 namespace tinygl {
 	class Mesh : public Transform {

@@ -1,5 +1,5 @@
 
-#include "tinygl/math.h"
+#include "tinygl/point.h"
 #include "tinygl/Screen.h"
 #include "tinygl/Mesh.h"
 #include "tinygl/Shader.h"

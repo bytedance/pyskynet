@@ -5,9 +5,10 @@
 #include <memory>
 #include <map>
 
-#include "tinygl/math.h"
+#include "tinygl/point.h"
 #include "tinygl/Mesh.h"
 #include "tinygl/Camera.h"
+#include "tinygl/Screen.h"
 #include "numsky/lua-numsky.h"
 
 

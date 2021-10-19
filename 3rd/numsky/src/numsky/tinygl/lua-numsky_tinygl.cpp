@@ -1,8 +1,6 @@
 #include "numsky/lua-numsky.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/tinygl/lua-numsky_tinygl.h"
-#include "tinygl/Camera.h"
-#include "tinygl/Screen.h"
 
 static int lmesh_setColor(lua_State *L) {
 	auto mesh = luabinding::ClassUtil<tinygl::Mesh>::check(L, 1);

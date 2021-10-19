@@ -12,6 +12,7 @@
 
 // 2. spinlock
 #include "spinlock.h"
+#include "skynet_malloc.h"
 
 // 3. npy
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
