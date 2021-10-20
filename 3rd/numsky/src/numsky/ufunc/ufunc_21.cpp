@@ -395,7 +395,7 @@ namespace _ufunc_21 {
 	};
 } // namespace _ufunc_21
 
-#define make_ufunc(vName) \
+#define make_ufunc21(vName) \
 template <> const numsky_ufunc numsky::ufunc_instance<numsky::UFUNC_##vName>::ufunc = { \
 	2, \
 	1, \
@@ -407,27 +407,27 @@ template <> const numsky_ufunc numsky::ufunc_instance<numsky::UFUNC_##vName>::uf
 }
 
 // mathematic
-make_ufunc(add);
-make_ufunc(sub);
-make_ufunc(mul);
-make_ufunc(div);
-make_ufunc(idiv);
-make_ufunc(mod);
-make_ufunc(pow);
+make_ufunc21(add);
+make_ufunc21(sub);
+make_ufunc21(mul);
+make_ufunc21(div);
+make_ufunc21(idiv);
+make_ufunc21(mod);
+make_ufunc21(pow);
 // bitwise
-make_ufunc(band);
-make_ufunc(bor);
-make_ufunc(bxor);
-make_ufunc(shl);
-make_ufunc(shr);
+make_ufunc21(band);
+make_ufunc21(bor);
+make_ufunc21(bxor);
+make_ufunc21(shl);
+make_ufunc21(shr);
 // comparison
-make_ufunc(eq);
-make_ufunc(lt);
-make_ufunc(le);
-make_ufunc(ne);
-make_ufunc(gt);
-make_ufunc(ge);
+make_ufunc21(eq);
+make_ufunc21(lt);
+make_ufunc21(le);
+make_ufunc21(ne);
+make_ufunc21(gt);
+make_ufunc21(ge);
 // other
-make_ufunc(fmax);
-make_ufunc(fmin);
-make_ufunc(atan2);
+make_ufunc21(fmax);
+make_ufunc21(fmin);
+make_ufunc21(atan2);
