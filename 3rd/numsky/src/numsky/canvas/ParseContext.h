@@ -15,8 +15,8 @@
 #include "numsky/tinygl/lua-numsky_tinygl.h"
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lauxlib.h"
 }
 
 #define NS_CANVAS_NAME_FUNCS "____"
