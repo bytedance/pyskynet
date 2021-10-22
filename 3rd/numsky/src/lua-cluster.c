@@ -147,7 +147,7 @@ packreq_multi(lua_State *L, int session, void * msg, uint32_t sz) {
 	uint8_t buf[TEMP_LENGTH];
 	int part = (sz - 1) / MULTI_PART + 1;
 	int i;
-	char *ptr = msg;
+	char *ptr = (char*)msg;
 	for (i=0;i<part;i++) {
 		uint32_t s;
 		if (sz > MULTI_PART) {
@@ -447,7 +447,7 @@ lpackresponse(lua_State *L) {
 			lua_pushlstring(L, (const char *)buf, 11);
 			lua_rawseti(L, -2, 1);
 
-			char * ptr = msg;
+			char * ptr = (char *)msg;
 			int i;
 			for (i=0;i<part;i++) {
 				int s;
@@ -560,7 +560,7 @@ lconcat(lua_State *L) {
 		return 0;
 	int sz = lua_tointeger(L,-1);
 	lua_pop(L,1);
-	char * buff = skynet_malloc(sz);
+	char * buff = (char *)skynet_malloc(sz);
 	int idx = 2;
 	int offset = 0;
 	while(lua_geti(L,1,idx) == LUA_TSTRING) {

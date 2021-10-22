@@ -137,8 +137,6 @@ static int lcamera_del(lua_State*L) {
 }
 
 namespace luabinding {
-    template <> const char* Class_<tinygl::Mesh>::metaname= "tinygl.mesh";
-
     template <> void Class_<tinygl::Mesh>::clazz(Class_<tinygl::Mesh> & c1) {
 		c1.setMetaFunction("__gc", lmesh_del)
 			.setMetaDefaultIndex()
@@ -169,8 +167,6 @@ namespace luabinding {
 } // namespace luabinding
 
 namespace luabinding {
-	template <> const char* Class_<tinygl::Camera>::metaname= "tinygl.camera";
-
     template <> void Class_<tinygl::Camera>::clazz(Class_<tinygl::Camera>& c2) {
 		c2.setMetaFunction("__gc", lcamera_del)
 			.setMetaDefaultIndex()

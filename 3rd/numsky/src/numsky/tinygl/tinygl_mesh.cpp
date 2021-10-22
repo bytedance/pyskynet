@@ -3,13 +3,6 @@
 #include "numsky/tinygl/lua-numsky_tinygl.h"
 
 namespace numsky {
-	template <> const char* MeshEnumVariable<MESH_POINT>::mesh_name = "point";
-	template <> const char* MeshEnumVariable<MESH_LINE>::mesh_name = "line";
-	template <> const char* MeshEnumVariable<MESH_RECT>::mesh_name = "rect";
-	template <> const char* MeshEnumVariable<MESH_POLYGON>::mesh_name = "polygon";
-	template <> const char* MeshEnumVariable<MESH_CIRCLE>::mesh_name = "circle";
-	template <> const char* MeshEnumVariable<MESH_SECTOR>::mesh_name = "sector";
-
 	std::unique_ptr<tinygl::Mesh> tinygl_mesh_new(ThrowableContext *ctx, int vertices_stacki, int indices_stacki) {
 		lua_State* L = ctx->L;
 		std::vector<int> axis;

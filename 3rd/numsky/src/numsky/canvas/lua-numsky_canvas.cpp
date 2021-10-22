@@ -62,8 +62,6 @@ static int canvas_dump_xml(lua_State* L){
 }
 
 namespace luabinding {
-    template <> const char* Class_<numsky_canvas>::metaname= "numsky.canvas";
-
     template <> void Class_<numsky_canvas>::clazz(Class_<numsky_canvas> & c) {
 		c.setFieldFunction("reset", canvas_reset)
 		   .setFieldFunction("render", canvas_render)

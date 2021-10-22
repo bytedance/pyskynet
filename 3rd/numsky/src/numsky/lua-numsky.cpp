@@ -6,14 +6,6 @@
 #include "numsky/tinygl/lua-numsky_tinygl.h"
 #include "numsky/canvas/AstNode.h"
 
-namespace luabinding {
-    template <> const char* Class_<numsky_dtype>::metaname= "numsky.dtype";
-    template <> const char* Class_<numsky_ndarray>::metaname= NS_ARR_METANAME;
-    template <> const char* Class_<numsky_nditer>::metaname= "numsky.nditer";
-    template <> const char* Class_<numsky_slice>::metaname= "numsky.slice";
-    template <> const char* Class_<numsky_ufunc>::metaname= "numsky.ufunc";
-}
-
 namespace numsky {
 	template <numsky::MESH_BUILTIN_ENUM N> void binding_mesh_ctor(luabinding::Module_ & m) {
 		m.setFunction(numsky::MeshEnumVariable<N>::mesh_name, numsky::ltinygl_mesh_builtin<N>);
