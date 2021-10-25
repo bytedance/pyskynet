@@ -34,6 +34,17 @@ pyskynet.ret = pyskynet_proto.ret
 #################
 
 
+def seri(*args):
+    msg_ptr, msg_size = foreign_seri.remotepack(*args)
+    re_str = foreign_seri.tobytes(msg_ptr, msg_size)
+    foreign_seri.trash(msg_ptr, msg_size)
+    return re_str
+
+
+def deseri(arg_str):
+    return foreign_seri.remoteunpack(arg_str)
+
+
 def getenv(key):
     data = skynet_py_main.getlenv(key)
     if data is None:
