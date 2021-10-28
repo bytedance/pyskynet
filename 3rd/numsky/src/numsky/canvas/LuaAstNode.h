@@ -44,7 +44,7 @@ private:
 	rapidxml::xml_document<> xml_doc; // xml document
 
 protected:
-	void xparse_data(numsky::canvas::ParseContext *ctx, const char*data, int data_len, bool isPI) final;
+	void xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) final;
 
 public:
 	friend class numsky::canvas::ReturnValNode;

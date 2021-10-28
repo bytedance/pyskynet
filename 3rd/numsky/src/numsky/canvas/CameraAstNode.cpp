@@ -14,19 +14,19 @@ namespace numsky {
 		void CameraAstNode::xparse_attr_pos(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			fi_pos = ctx->put_explist<false>(xattr->value(), xattr->value_size());
 		}
-		void CameraAstNode::xparse_attr_ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void CameraAstNode::xparse_attr_Ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(si_perspective != 0 || si_ortho != 0) {
 				ctx->raise(xattr->name(), "ortho and perspective can only set one");
 			}
 			si_ortho = ctx->put_static_explist(xattr);
 		}
-		void CameraAstNode::xparse_attr_perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void CameraAstNode::xparse_attr_Perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(si_perspective != 0 || si_ortho != 0) {
 				ctx->raise(xattr->name(), "ortho and perspective can only set one");
 			}
 			si_perspective = ctx->put_static_explist(xattr);
 		}
-		void CameraAstNode::xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void CameraAstNode::xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			si_shape = ctx->put_static_explist(xattr);
 		}
 		IValNode *CameraAstNode::eval(EvalContext *ctx) {
@@ -121,11 +121,11 @@ namespace numsky {
 
 	// AbstractMeshAstNode
 	namespace canvas {
-		void AbstractMeshAstNode::xparse_data(ParseContext *ctx, const char *data, int data_len, bool isPI) {
+		void AbstractMeshAstNode::xparse_data(ParseContext *ctx, const char *data, int data_len, bool isScope) {
 			if(fi_data!=0) {
 				ctx->raise(data, "mesh's data has been setted");
 			} else {
-				if(isPI) {
+				if(isScope) {
 					fi_data = ctx->put_explist<true>(data, data_len);
 				} else {
 					fi_data = ctx->put_explist<false>(data, data_len);
@@ -167,10 +167,10 @@ namespace numsky {
 
 	// MeshAstNode
 	namespace canvas {
-		void MeshAstNode::xparse_attr_vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void MeshAstNode::xparse_attr_Vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			si_vertices = ctx->put_static_explist(xattr);
 		}
-		void MeshAstNode::xparse_attr_indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void MeshAstNode::xparse_attr_Indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			si_indices = ctx->put_static_explist(xattr);
 		}
 		void MeshAstNode::post_parse(PostParseContext *ctx) {
@@ -181,10 +181,10 @@ namespace numsky {
 
 	// BuiltinMeshAstNode
 	namespace canvas {
-		void BuiltinMeshAstNode::xparse_attr_pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BuiltinMeshAstNode::xparse_attr_Pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			si_pivot = ctx->put_static_explist(xattr);
 		}
-		void BuiltinMeshAstNode::xparse_attr_size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BuiltinMeshAstNode::xparse_attr_Size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			si_size = ctx->put_static_explist(xattr);
 		}
 		void BuiltinMeshAstNode::post_parse(PostParseContext *ctx) {

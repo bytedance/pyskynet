@@ -19,9 +19,9 @@ namespace numsky {
 			int si_shape;
 			void xparse_attr_rot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_attr_pos(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 		public:
 			friend class CameraValNode;
 			CameraAstNode(): BaseAstNode(), fi_rot(0), fi_pos(0), screen_shape(4,4,1), si_ortho(0), si_perspective(0), si_shape(0) {}
@@ -61,8 +61,8 @@ namespace numsky {
 			int si_vertices;
 			int si_indices;
 		protected:
-			void xparse_attr_vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 		public:
 			MeshAstNode() : AbstractMeshAstNode(), si_vertices(0), si_indices(0) {}
 			void post_parse(PostParseContext *ctx) final;
@@ -73,8 +73,8 @@ namespace numsky {
 			int si_pivot;
 			int si_size;
 		protected:
-			void xparse_attr_pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_Size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			virtual std::unique_ptr<tinygl::Mesh> create_mesh(PostParseContext *ctx, double* size, int size_len) = 0;
 		public:
 			void post_parse(PostParseContext *ctx) final;

@@ -19,10 +19,10 @@ namespace luabinding {
 }
 
 namespace numsky {
-	template <> const char* MeshEnumVariable<MESH_POINT>::mesh_name = "point";
-	template <> const char* MeshEnumVariable<MESH_LINE>::mesh_name = "line";
-	template <> const char* MeshEnumVariable<MESH_RECT>::mesh_name = "rect";
-	template <> const char* MeshEnumVariable<MESH_POLYGON>::mesh_name = "polygon";
-	template <> const char* MeshEnumVariable<MESH_CIRCLE>::mesh_name = "circle";
-	template <> const char* MeshEnumVariable<MESH_SECTOR>::mesh_name = "sector";
+	template <> const char* MeshEnumVariable<MESH_POINT>::mesh_name = "Point";
+	template <> const char* MeshEnumVariable<MESH_LINE>::mesh_name = "Line";
+	template <> const char* MeshEnumVariable<MESH_RECT>::mesh_name = "Rect";
+	template <> const char* MeshEnumVariable<MESH_POLYGON>::mesh_name = "Polygon";
+	template <> const char* MeshEnumVariable<MESH_CIRCLE>::mesh_name = "Circle";
+	template <> const char* MeshEnumVariable<MESH_SECTOR>::mesh_name = "Sector";
 }

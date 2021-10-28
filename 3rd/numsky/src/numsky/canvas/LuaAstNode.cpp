@@ -61,12 +61,8 @@ namespace numsky {
 	}
 }
 
-void numsky_canvas::xparse_data(numsky::canvas::ParseContext *ctx, const char*data, int data_len, bool isPI) {
-	if(isPI) {
-		ctx->put_global(data, data_len);
-	} else {
-		ctx->raise(data, "impossible case");
-	}
+void numsky_canvas::xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) {
+	ctx->put_global(data, data_len);
 }
 
 numsky::canvas::IValNode* numsky_canvas::eval(numsky::canvas::EvalContext *ctx) {

@@ -39,13 +39,13 @@ namespace numsky {
 				xfunction = xattr;
 			}
 		}
-		void VarAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void VarAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
 			if(setted) {
 				ctx->raise(data, "var can't has multi ");
 			} else {
 				setted = true;
 				if(xlocal != NULL) {
-					if(isPI) {
+					if(isScope) {
 						fi_assign = ctx->put_varlocal<true>(xlocal, data, data_len);
 					} else {
 						fi_assign = ctx->put_varlocal<false>(xlocal, data, data_len);
@@ -71,7 +71,10 @@ namespace numsky {
 			}
 			return NULL;
 		}
-		void ProcAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void ProcAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
+			if(isScope) {
+				ctx->raise(data, "don't use scope in proc ");
+			}
 			if(fi_proc > 0) {
 				ctx->raise(data, "proc data has been setted");
 			} else {
@@ -88,14 +91,14 @@ namespace numsky {
 		TypeGuard * ScalarAstNode::get_type_guard() {
 			return &type_guard;
 		}
-		void ScalarAstNode::xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void ScalarAstNode::xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			ctx->raise(xattr->name(), "scalar can't has shape");
 		}
-		void ScalarAstNode::xparse_data(ParseContext *ctx, const char*data, int data_len, bool isPI) {
+		void ScalarAstNode::xparse_data(ParseContext *ctx, const char*data, int data_len, bool isScope) {
 			if(fi_data!=0) {
 				ctx->raise(data, "scalar's data has been setted");
 			} else {
-				if(isPI) {
+				if(isScope) {
 					fi_data = ctx->put_explist<true>(data, data_len);
 				} else {
 					fi_data = ctx->put_explist<false>(data, data_len);
@@ -154,11 +157,11 @@ namespace numsky {
 
 	// LuaAstNode
 	namespace canvas {
-		void AnyAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void AnyAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
 			if(fi_data!=0) {
 				ctx->raise(data, "<any> node's data has been setted");
 			} else {
-				if(isPI) {
+				if(isScope) {
 					fi_data = ctx->put_explist<true>(data, data_len);
 				} else {
 					fi_data = ctx->put_explist<false>(data, data_len);

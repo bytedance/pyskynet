@@ -8,7 +8,7 @@ import numpy as np
 
 pyskynet.start()
 
-canvas = pyskynet.canvas("""<?lua
+canvas = pyskynet.canvas("""<?reset
 local LEN = 100  -- define static variable
 local s1, s2 = ...      -- pass ... from canv:reset(...)
 
@@ -21,47 +21,47 @@ local s1, s2 = ...      -- pass ... from canv:reset(...)
 </var>
 
 <!-- make an array -->
-<arr>
+<Arr>
     <int32> 321 </int32>
     <int32> 13,4,4,23</int32> <!-- multi int32 value, fill into arr-->
     <float32> LEN,n,v1,v2,v3 </float32> <!-- use static & dynamic dynamic variable -->
-    <float32><?lua  -- more complex code
+    <float32><?scope  -- more complex code
         if func(v1, v2) then
             return v1
         else
             return v2
         end
     ?></float32>
-</arr>
+</Arr>
 
 <!-- make a 2d array -->
-<arr x-type="int32"> <!-- put dtype， default float32 -->
-    <arr>
+<Arr x-type="int32"> <!-- put dtype， default float32 -->
+    <Arr>
         <int32>1,2,3</int32>
-    </arr>
-    <arr x-for="i=1,10">  <!-- expand with for loop -->
+    </Arr>
+    <Arr x-for="i=1,10">  <!-- expand with for loop -->
         <int32>i,i,i</int32>
-    </arr>
-    <arr x-for="k,v in pairs({5,3,4})" x-sort="v"> <!-- sort by number -->
+    </Arr>
+    <Arr x-for="k,v in pairs({5,3,4})" x-sort="v"> <!-- sort by number -->
         <int32>k,v,k+v</int32>
-    </arr>
+    </Arr>
 
     <!-- exception when not match -->
-    <!--arr>
+    <!--Arr>
         <int32>1,2,3,4,4,5,</int32>
-    </arr-->
-</arr>
+    </Arr-->
+</Arr>
 
 <!-- make a table -->
-<table>
+<Table>
     <int32>321</int32>
-    <arr name="fds"> <!-- name as table's key-->
+    <Array x-name="fds"> <!-- name as table's key-->
         <int32>32131</int32>
-    </arr>
-    <table> <!--table in table-->
-        <int32 name="num">321</int32>
-    </table>
-</table>
+    </Array>
+    <Table> <!--table in table-->
+        <int32 x-name="num">321</int32>
+    </Table>
+</Table>
 
 """, "hello.xml")
 

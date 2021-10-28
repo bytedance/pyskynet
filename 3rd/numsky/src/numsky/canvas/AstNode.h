@@ -47,8 +47,8 @@ namespace numsky {
 			char* (*cpy_func)(lua_State*L, char *left, char *right, int count);
 			int (*lcpy_func)(lua_State*L, char *dataptr, int count);
 		protected:
-			void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) final;
+			void xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) final;
 			void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 
 		public:

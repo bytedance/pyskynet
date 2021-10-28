@@ -103,10 +103,10 @@ namespace numsky {
 					streamw<<" "<<NAME_FUNCS<<"["<<si<<"]=function() return "<<std::string(xattr->value(), xattr->value_size())<<" end ";
 					return si;
 				}
-				template <bool USE_PI> inline int put_explist(const char *data, int data_len) {
+				template <bool USE_SCOPE> inline int put_explist(const char *data, int data_len) {
 					streamw.fixline(calc_line(data));
 					int fi = ++ fi_counter;
-					if(USE_PI) {
+					if(USE_SCOPE) {
 						streamw<<" "<<NAME_FUNCS<<"["<<fi<<"]=function() "<<std::string(data, data_len)<<" end ";
 					} else {
 						streamw<<" "<<NAME_FUNCS<<"["<<fi<<"]=function() return "<<std::string(data, data_len)<<" end ";
@@ -157,14 +157,14 @@ namespace numsky {
 					streamw<<NAME_FUNCS<<"["<<fi_proc<<"]=function() "<<script<<" end ";
 					return fi_proc;
 				}
-				template <bool USE_PI> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
+				template <bool USE_SCOPE> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
 					streamw.fixline(calc_line(xlocal->value()));
 					std::string var(xlocal->value(), xlocal->value_size());
 					std::string script(data, data_len);
 					int fi_assign = ++ fi_counter;
 					streamw<<" local "<<var<<" ";
 					streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function(...) "<<var<<"=";
-					if(!USE_PI){
+					if(!USE_SCOPE){
 						streamw<<script<<" end ";
 					} else {
 						streamw<<"(function(...) "<<script<<" end)(...) end ";
