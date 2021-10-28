@@ -97,6 +97,7 @@ def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
     if re:
         return re
     else:
+        gevent.sleep(0.01)
         raise PySkynetCallException("call failed from %s" % dst)
 
 
