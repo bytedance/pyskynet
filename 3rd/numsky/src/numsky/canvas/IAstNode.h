@@ -113,7 +113,7 @@ namespace numsky {
 			virtual BaseAstNode* xparse_child_mesh(ParseContext *ctx, rapidxml::xml_node<> *xnode, int mesh_enum);
 
 		protected:
-			IAstNode* xparse_child_var(ParseContext *ctx, rapidxml::xml_node<> *xnode);
+			virtual IAstNode* xparse_child_var(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 			IAstNode* xparse_child_proc(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 
 		public:

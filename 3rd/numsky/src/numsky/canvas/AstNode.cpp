@@ -21,7 +21,11 @@ namespace numsky {
 	namespace canvas {
 		IValNode* VarAstNode::eval(EvalContext *ctx) {
 			if(xlocal != NULL) {
-				ctx->assign(fi_assign);
+				if(use_dots) {
+					ctx->assign<true>(fi_assign);
+				} else {
+					ctx->assign<false>(fi_assign);
+				}
 			}
 			return NULL;
 		}
@@ -46,9 +50,17 @@ namespace numsky {
 				setted = true;
 				if(xlocal != NULL) {
 					if(isScope) {
-						fi_assign = ctx->put_varlocal<true>(xlocal, data, data_len);
+						if(use_dots) {
+							fi_assign = ctx->put_varlocal<true, true>(xlocal, data, data_len);
+						} else {
+							fi_assign = ctx->put_varlocal<true, false>(xlocal, data, data_len);
+						}
 					} else {
-						fi_assign = ctx->put_varlocal<false>(xlocal, data, data_len);
+						if(use_dots) {
+							fi_assign = ctx->put_varlocal<false, true>(xlocal, data, data_len);
+						} else {
+							fi_assign = ctx->put_varlocal<false, false>(xlocal, data, data_len);
+						}
 					}
 				} else if(xfunction != NULL) {
 					ctx->put_varfunction(xfunction, data, data_len);

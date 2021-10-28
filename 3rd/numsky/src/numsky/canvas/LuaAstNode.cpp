@@ -64,6 +64,11 @@ namespace numsky {
 void numsky_canvas::xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) {
 	ctx->put_global(data, data_len);
 }
+numsky::canvas::IAstNode* numsky_canvas::xparse_child_var(numsky::canvas::ParseContext *ctx, rapidxml::xml_node<> *xnode) {
+	numsky::canvas::IAstNode *child = new numsky::canvas::VarAstNode(true);
+	child->parse_xml(ctx, xnode);
+	return child;
+}
 
 numsky::canvas::IValNode* numsky_canvas::eval(numsky::canvas::EvalContext *ctx) {
 	return new numsky::canvas::ReturnValNode(this);

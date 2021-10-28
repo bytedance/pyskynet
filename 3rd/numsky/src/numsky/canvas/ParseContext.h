@@ -157,17 +157,26 @@ namespace numsky {
 					streamw<<NAME_FUNCS<<"["<<fi_proc<<"]=function() "<<script<<" end ";
 					return fi_proc;
 				}
-				template <bool USE_SCOPE> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
+				template <bool USE_SCOPE, bool USE_DOTS> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
 					streamw.fixline(calc_line(xlocal->value()));
 					std::string var(xlocal->value(), xlocal->value_size());
 					std::string script(data, data_len);
 					int fi_assign = ++ fi_counter;
 					streamw<<" local "<<var<<" ";
-					streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function(...) "<<var<<"=";
-					if(!USE_SCOPE){
-						streamw<<script<<" end ";
+					if(USE_DOTS) {
+						streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function(...) "<<var<<"=";
+						if(!USE_SCOPE){
+							streamw<<script<<" end ";
+						} else {
+							streamw<<"(function(...) "<<script<<" end)(...) end ";
+						}
 					} else {
-						streamw<<"(function(...) "<<script<<" end)(...) end ";
+						streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function() "<<var<<"=";
+						if(!USE_SCOPE){
+							streamw<<script<<" end ";
+						} else {
+							streamw<<"(function() "<<script<<" end)() end ";
+						}
 					}
 					return fi_assign;
 				}

@@ -16,6 +16,7 @@ namespace numsky {
 		};
 
 		class VarAstNode : public ConAstNode {
+			bool use_dots;
 			rapidxml::xml_attribute<> *xlocal;
 			rapidxml::xml_attribute<> *xfunction;
 			int fi_assign;
@@ -26,7 +27,7 @@ namespace numsky {
 			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) final;
 			void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 		public:
-			VarAstNode(): xlocal(NULL), xfunction(NULL), fi_assign(0), setted(false) {}
+			VarAstNode(bool v_use_dots): use_dots(v_use_dots), xlocal(NULL), xfunction(NULL), fi_assign(0), setted(false) {}
 			IValNode* eval(EvalContext *ctx) final;
 		};
 

@@ -45,6 +45,7 @@ private:
 
 protected:
 	void xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) final;
+	numsky::canvas::IAstNode* xparse_child_var(numsky::canvas::ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 
 public:
 	friend class numsky::canvas::ReturnValNode;

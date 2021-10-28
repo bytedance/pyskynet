@@ -422,7 +422,7 @@ namespace numsky {
 				ctx->raise(xnode->name(), "this element cannot has var as child");
 				return NULL;
 			} else {
-				IAstNode *child = new VarAstNode();
+				IAstNode *child = new VarAstNode(false);
 				child->parse_xml(ctx, xnode);
 				return child;
 			}
