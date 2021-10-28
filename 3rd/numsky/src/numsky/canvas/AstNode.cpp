@@ -25,14 +25,14 @@ namespace numsky {
 			}
 			return NULL;
 		}
-		void VarAstNode::xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void VarAstNode::xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(xlocal != NULL || xfunction != NULL) {
 				ctx->raise(xattr->name(), "var has put local or function");
 			} else {
 				xlocal = xattr;
 			}
 		}
-		void VarAstNode::xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void VarAstNode::xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(xlocal != NULL || xfunction != NULL) {
 				ctx->raise(xattr->name(), "var has put local or function");
 			} else {

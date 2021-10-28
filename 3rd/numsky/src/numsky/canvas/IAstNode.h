@@ -30,20 +30,20 @@ namespace numsky {
 			virtual void xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// control
-			virtual void xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// type
-			virtual void xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_ndim(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_len(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_count(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// var
-			virtual void xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// graphic
 			virtual void xparse_attr_rot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
@@ -54,7 +54,6 @@ namespace numsky {
 			// graphic mesh
 			virtual void xparse_attr_scale(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_layer(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_fill(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
@@ -91,9 +90,9 @@ namespace numsky {
 		protected:
 			// attrs
 			void xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 
 			void xparse_attr_len(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;
 			void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;

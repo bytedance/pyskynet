@@ -21,8 +21,8 @@ namespace numsky {
 			int fi_assign;
 			bool setted;
 		protected:
-			void xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) final;
 			void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 		public:

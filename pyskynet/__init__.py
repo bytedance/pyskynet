@@ -121,8 +121,9 @@ class __CanvasService(object):
 
 
 def canvas(script, name="unknowxml"):
-    scriptaddr = setenv(None, script)
-    return __CanvasService(newservice("canvas_service", scriptaddr, name))
+    canvas_service = newservice("canvas_service")
+    pyskynet_proto.call(canvas_service, PTYPE_FOREIGN, "init", script, name)
+    return __CanvasService(canvas_service)
 
 
 def self():

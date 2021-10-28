@@ -1,15 +1,14 @@
-local foreign_seri = require "pyskynet.foreign_seri"
 local ns = require "numsky"
 local skynet = require "skynet"
 local pyskynet = require "pyskynet"
 local foreign = require "pyskynet.foreign"
 
-local script_addr, file_name = ...
-local script = pyskynet.getenv(script_addr)
-
-local canv = ns.canvas(script, file_name)
-
 local CMD = {}
+local canv = nil
+
+function CMD.init(script, file_name)
+	canv = ns.canvas(script, file_name)
+end
 
 function CMD.reset(...)
 	return canv:reset(...)

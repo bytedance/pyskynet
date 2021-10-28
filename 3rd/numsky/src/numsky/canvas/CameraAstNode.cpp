@@ -144,7 +144,7 @@ namespace numsky {
 		void AbstractMeshAstNode::xparse_attr_layer(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			fi_layer = ctx->put_static_explist(xattr);
 		}
-		void AbstractMeshAstNode::xparse_attr_fill(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void AbstractMeshAstNode::xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			std::string fill_type_str(xattr->value(), xattr->value_size());
 			if(fill_type_str=="point") {
 				fill_type = tinygl::FILL_POINT;

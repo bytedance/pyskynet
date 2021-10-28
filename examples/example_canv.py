@@ -14,9 +14,9 @@ local s1, s2 = ...      -- pass ... from canv:reset(...)
 
 ?>
 
-<var local="n">1</var> <!-- define dynamic variable  -->
-<var local="v1,v2,v3">...</var> <!-- pass ... from canv:render(...) -->
-<var function="func(a,b)"> <!-- define function -->
+<var x-local="n">1</var> <!-- define dynamic variable  -->
+<var x-local="v1,v2,v3">...</var> <!-- pass ... from canv:render(...) -->
+<var x-function="func(a,b)"> <!-- define function -->
     return math.max(a,b)
 </var>
 
@@ -35,14 +35,14 @@ local s1, s2 = ...      -- pass ... from canv:reset(...)
 </arr>
 
 <!-- make a 2d array -->
-<arr dtype="int32"> <!-- put dtype， default float32 -->
+<arr x-type="int32"> <!-- put dtype， default float32 -->
     <arr>
         <int32>1,2,3</int32>
     </arr>
-    <arr for="i=1,10">  <!-- expand with for loop -->
+    <arr x-for="i=1,10">  <!-- expand with for loop -->
         <int32>i,i,i</int32>
     </arr>
-    <arr for="k,v in pairs({5,3,4})" sort="v"> <!-- sort by number -->
+    <arr x-for="k,v in pairs({5,3,4})" x-sort="v"> <!-- sort by number -->
         <int32>k,v,k+v</int32>
     </arr>
 

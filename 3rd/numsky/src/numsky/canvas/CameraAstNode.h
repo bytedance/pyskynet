@@ -43,11 +43,11 @@ namespace numsky {
 			std::unique_ptr<tinygl::Mesh> mesh_ptr;
 		protected:
 			void xparse_data(ParseContext *ctx, const char *data, int data_len, bool isPI) override;
+			void xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_attr_rot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_attr_pos(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_attr_scale(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_attr_layer(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_fill(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 		public:
 			friend class MeshValNode;
 			AbstractMeshAstNode(): BaseAstNode(), fi_rot(0), fi_pos(0), fi_scale(0), fi_data(0),

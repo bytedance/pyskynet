@@ -131,7 +131,7 @@ namespace numsky {
 			return new ListValNode(this);
 		}
 
-		void ListAstNode::xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void ListAstNode::xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			ctx->raise(xattr->name(), "list arr don't need dtype, TODO deal this error with other logic");
 		}
 
@@ -143,7 +143,7 @@ namespace numsky {
 			return new ArrayValNode(this);
 		}
 
-		void ArrayAstNode::xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void ArrayAstNode::xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			std::string value(xattr->value(), xattr->value_size());
 			numsky_dtype *arr_dtype = ctx->try_parse_dtype(xattr->value());
 			if(arr_dtype==NULL) {
