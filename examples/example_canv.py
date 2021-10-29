@@ -25,7 +25,7 @@ local s1, s2 = ...      -- pass ... from canv:reset(...)
     <int32> 321 </int32>
     <int32> 13,4,4,23</int32> <!-- multi int32 value, fill into arr-->
     <float32> LEN,n,v1,v2,v3 </float32> <!-- use static & dynamic dynamic variable -->
-    <float32><?scope  -- more complex code
+    <float32><?lua -- more complex code
         if func(v1, v2) then
             return v1
         else

@@ -199,13 +199,11 @@ namespace numsky {
 						ctx->raise(xchild->value(), "node can only have one data element");
 					} else {
 						if(pi=="lua") {
-							xparse_data(ctx, xchild->value(), xchild->value_size(), false);
-						} else if(pi=="scope") {
 							xparse_data(ctx, xchild->value(), xchild->value_size(), true);
 						} else if(pi=="reset"){
 							xparse_pi_reset(ctx, xchild->value(), xchild->value_size());
 						} else {
-							ctx->raise(xchild->name(), "PI target must be lua or scope or reset");
+							ctx->raise(xchild->name(), "PI target must be lua or reset");
 						}
 						parsed_data = true;
 					}
