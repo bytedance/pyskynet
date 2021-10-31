@@ -136,6 +136,7 @@ extern "C" {
 
 		// canvas
 		m.setFunction("canvas", luabinding::Class_<numsky_canvas>::ctor);
+		m.setFunction("_canvas_enum_tag_attr", numsky::canvas::enum_tag_attr);
 
 		m.finish();
 

@@ -13,6 +13,7 @@
 #include "numsky/lua-numsky.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/tinygl/lua-numsky_tinygl.h"
+#include "numsky/canvas/DefinedException.h"
 
 extern "C" {
 #include "lua.h"
@@ -82,6 +83,7 @@ namespace numsky {
 					}
 				}
 				ParseContext(lua_State*L, std::string &xml_script);
+				void raise(const char *where, const DefinedException & e);
 				void raise(const char *where, const char* what);
 				void raise(const char *where, const char* what, const std::string &after);
 				inline void put_do(rapidxml::xml_node<> *xnode) {

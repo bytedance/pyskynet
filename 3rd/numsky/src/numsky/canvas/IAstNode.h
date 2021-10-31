@@ -22,6 +22,7 @@ namespace numsky {
 
 		class IAstNode {
 		public:
+			rapidxml::xml_node<>* self_xnode;
 			int line;
 			IAstNode() : line(0) {}
 			friend class AttrParse;
@@ -144,5 +145,7 @@ namespace numsky {
 		};
 
 		class ReturnValNode;
+
+		int enum_tag_attr(lua_State*L);
 	}
 }
