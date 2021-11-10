@@ -131,7 +131,7 @@ namespace luabinding {
 		size_t len = 0;
 		const char * name = luaL_checklstring(L, 1, &len);
 		unqlite *pDb;
-		int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_CREATE);
+		int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_CREATE | UNQLITE_OPEN_OMIT_JOURNALING);
 		if( rc != UNQLITE_OK ) {
 			return luaL_error(L, "unqlite open failed %d", rc);
 		}
@@ -147,7 +147,7 @@ int unqlite_readonly(lua_State*L) {
 	size_t len = 0;
 	const char * name = luaL_checklstring(L, 1, &len);
 	unqlite *pDb;
-	int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_READONLY);
+	int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_READONLY | UNQLITE_OPEN_OMIT_JOURNALING);
 	if( rc != UNQLITE_OK ) {
 		return luaL_error(L, "unqlite open failed %d", rc);
 	}
