@@ -9,7 +9,7 @@ import pyskynet.skynet_py_main as skynet_py_main
 import pyskynet.skynet_py_foreign_seri as foreign_seri
 import pyskynet.proto as pyskynet_proto
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 start = pyskynet.boot.start
 join = pyskynet.boot.join
 boot_config = pyskynet.boot.boot_config
