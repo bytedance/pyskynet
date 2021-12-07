@@ -71,7 +71,10 @@ def csend(py_dst, int type_id, py_session, py_msg, py_size=None):
     else:
         session = skynet_py_sendname(dstname, type_id, session, ptr, size)
     if session < 0:
-        raise Exception("skynet send exception")
+        if session == -2:
+            raise Exception("package is too large:%s"%session)
+        else:
+            return None
     else:
         return session
 

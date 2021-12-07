@@ -145,7 +145,7 @@ def main():
             pyskynet.scriptservice([script, args.script], *args.args)
             join()
         except pyskynet.proto.PySkynetCallException as err:
-            print(err)
+            pyskynet_proto.hook_print(err)
             gevent.sleep(1)
         except KeyboardInterrupt:
             return
