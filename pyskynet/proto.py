@@ -15,9 +15,8 @@ local_session_to_ar = {}
 
 pyskynet_proto_dict = {}
 
-def hook_print(*args, **kwargs):
-    kwargs["flush"] = True
-    print("pyskynet:", *args, **kwargs)
+def hook_print(*args):
+    print("pyskynet:", *args, flush=True)
 
 class PySkynetProto(object):
     def __init__(self, id, name, pack=None, unpack=None, dispatch=None):
