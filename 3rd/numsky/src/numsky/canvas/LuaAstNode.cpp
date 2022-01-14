@@ -36,10 +36,6 @@ namespace numsky {
 			child->parse_xml(ctx, xnode);
 			return child;
 		}
-		BaseAstNode* AbstractLuaAstNode::xparse_child_mesh(ParseContext *ctx, rapidxml::xml_node<> *xnode, int mesh_enum) {
-			ctx->raise(xnode->name(), "TODO");
-			return NULL;
-		}
 		bool AbstractLuaAstNode::xparse_has_scope() {
 			return true;
 		}

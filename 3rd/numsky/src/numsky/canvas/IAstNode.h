@@ -26,6 +26,7 @@ namespace numsky {
 			int line;
 			IAstNode() : line(0) {}
 			friend class AttrParse;
+			template <int A> friend struct AttrDesc;
 		protected:
 			// attrs
 			virtual void xparse_attr_xname(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
@@ -88,6 +89,7 @@ namespace numsky {
 			ExpandControl ctrl;
 			std::vector<IAstNode*> children;
 			friend class TagParse;
+			template <int A> friend struct TagDesc;
 
 		protected:
 			// attrs
