@@ -1,9 +1,7 @@
 
 #pragma once
 
-extern "C" {
 #include "skynet_foreign/numsky.h"
-}
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -32,6 +30,7 @@ extern "C" {
 #define MAX_COOKIE 32
 #define COMBINE_TYPE(t,v) ((t) | (v) << 3)
 
+#define BLOCK_SIZE 128
 #define MAX_DEPTH 32
 
 enum SeriMode {
