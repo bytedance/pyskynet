@@ -9,7 +9,7 @@ import pyskynet.skynet_py_main as skynet_py_main
 import pyskynet.skynet_py_foreign_seri as foreign_seri
 import pyskynet.proto as pyskynet_proto
 
-__version__ = '0.0.11'
+__version__ = '0.1.5'
 start = pyskynet.boot.start
 join = pyskynet.boot.join
 boot_config = pyskynet.boot.boot_config
@@ -32,6 +32,17 @@ pyskynet.ret = pyskynet_proto.ret
 #################
 # env set & get #
 #################
+
+
+def seri(*args):
+    msg_ptr, msg_size = foreign_seri.remotepack(*args)
+    re_str = foreign_seri.tobytes(msg_ptr, msg_size)
+    foreign_seri.trash(msg_ptr, msg_size)
+    return re_str
+
+
+def deseri(arg_str):
+    return foreign_seri.remoteunpack(arg_str)
 
 
 def getenv(key):
@@ -110,8 +121,9 @@ class __CanvasService(object):
 
 
 def canvas(script, name="unknowxml"):
-    scriptaddr = setenv(None, script)
-    return __CanvasService(newservice("canvas_service", scriptaddr, name))
+    canvas_service = newservice("canvas_service")
+    pyskynet_proto.call(canvas_service, PTYPE_FOREIGN, "init", script, name)
+    return __CanvasService(canvas_service)
 
 
 def self():

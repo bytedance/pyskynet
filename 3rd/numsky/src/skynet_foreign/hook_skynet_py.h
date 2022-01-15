@@ -12,6 +12,7 @@
 
 // 2. spinlock
 #include "spinlock.h"
+#include "skynet_malloc.h"
 
 // 3. npy
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -19,13 +20,16 @@
 
 #else
 
+#define skynet_malloc malloc
+#define skynet_free free
+
 // spinlock do nothing
 #define SPIN_INIT(q)
 #define SPIN_LOCK(q)
 #define SPIN_UNLOCK(q)
 #define SPIN_DESTROY(q)
 
-#define npy_intp long
+#define npy_intp int64_t
 
 // TODO not right...
 

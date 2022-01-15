@@ -13,10 +13,11 @@
 #include "numsky/lua-numsky.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/tinygl/lua-numsky_tinygl.h"
+#include "numsky/canvas/DefinedException.h"
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lauxlib.h"
 }
 
 #define NS_CANVAS_NAME_FUNCS "____"
@@ -82,6 +83,7 @@ namespace numsky {
 					}
 				}
 				ParseContext(lua_State*L, std::string &xml_script);
+				void raise(const char *where, const DefinedException & e);
 				void raise(const char *where, const char* what);
 				void raise(const char *where, const char* what, const std::string &after);
 				inline void put_do(rapidxml::xml_node<> *xnode) {
@@ -103,10 +105,10 @@ namespace numsky {
 					streamw<<" "<<NAME_FUNCS<<"["<<si<<"]=function() return "<<std::string(xattr->value(), xattr->value_size())<<" end ";
 					return si;
 				}
-				template <bool USE_PI> inline int put_explist(const char *data, int data_len) {
+				template <bool USE_SCOPE> inline int put_explist(const char *data, int data_len) {
 					streamw.fixline(calc_line(data));
 					int fi = ++ fi_counter;
-					if(USE_PI) {
+					if(USE_SCOPE) {
 						streamw<<" "<<NAME_FUNCS<<"["<<fi<<"]=function() "<<std::string(data, data_len)<<" end ";
 					} else {
 						streamw<<" "<<NAME_FUNCS<<"["<<fi<<"]=function() return "<<std::string(data, data_len)<<" end ";
@@ -157,17 +159,26 @@ namespace numsky {
 					streamw<<NAME_FUNCS<<"["<<fi_proc<<"]=function() "<<script<<" end ";
 					return fi_proc;
 				}
-				template <bool USE_PI> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
+				template <bool USE_SCOPE, bool USE_DOTS> inline int put_varlocal(rapidxml::xml_attribute<> *xlocal, const char *data, int data_len) {
 					streamw.fixline(calc_line(xlocal->value()));
 					std::string var(xlocal->value(), xlocal->value_size());
 					std::string script(data, data_len);
 					int fi_assign = ++ fi_counter;
 					streamw<<" local "<<var<<" ";
-					streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function(...) "<<var<<"=";
-					if(!USE_PI){
-						streamw<<script<<" end ";
+					if(USE_DOTS) {
+						streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function(...) "<<var<<"=";
+						if(!USE_SCOPE){
+							streamw<<script<<" end ";
+						} else {
+							streamw<<"(function(...) "<<script<<" end)(...) end ";
+						}
 					} else {
-						streamw<<"(function(...) "<<script<<" end)(...) end ";
+						streamw<<NAME_FUNCS<<"["<<fi_assign<<"]=function() "<<var<<"=";
+						if(!USE_SCOPE){
+							streamw<<script<<" end ";
+						} else {
+							streamw<<"(function() "<<script<<" end)() end ";
+						}
 					}
 					return fi_assign;
 				}

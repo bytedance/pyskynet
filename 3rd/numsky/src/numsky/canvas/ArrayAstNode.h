@@ -28,7 +28,7 @@ namespace numsky {
 		public:
 			std::unique_ptr<npy_intp[]> shape;
 		protected:
-			void xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 		public:
 			explicit ArrayAstNode(int v_ndim) : AbstractArrayAstNode(v_ndim), shape(new npy_intp[CANVAS_MAX_DIM]) {
 				for(int i=0;i<CANVAS_MAX_DIM;i++) {
@@ -45,7 +45,7 @@ namespace numsky {
 		private:
 			AbstractArrayAstNode *arr_parent;
 		protected:
-			void xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 		public:
 			ListAstNode(int v_ndim, AbstractArrayAstNode *parent) : AbstractArrayAstNode(v_ndim), arr_parent(parent) {
 				dtype = parent->dtype;

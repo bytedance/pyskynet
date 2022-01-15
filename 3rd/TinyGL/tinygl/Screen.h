@@ -5,9 +5,9 @@
  */
 #include <string.h>
 #include <stdio.h>
-#include "tinygl/math.h"
-#include "tinygl/point.h"
-#include "tinygl/Shader.h"
+
+#include "point.h"
+#include "Shader.h"
 
 
 #define ZB_Z_BITS 16

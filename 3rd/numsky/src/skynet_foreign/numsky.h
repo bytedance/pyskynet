@@ -4,8 +4,8 @@
 
 #include "skynet_foreign/skynet_foreign.h"
 
-#include <lua.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lauxlib.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -3,6 +3,7 @@ import pyskynet.skynet_py_mq as skynet_py_mq
 import pyskynet.skynet_py_foreign_seri as foreign_seri
 import gevent
 from gevent.event import AsyncResult
+import traceback
 
 SKYNET_PTYPE = skynet_py_mq.SKYNET_PTYPE
 
@@ -14,6 +15,8 @@ local_session_to_ar = {}
 
 pyskynet_proto_dict = {}
 
+def hook_print(*args):
+    print("pyskynet:", *args, flush=True)
 
 class PySkynetProto(object):
     def __init__(self, id, name, pack=None, unpack=None, dispatch=None):
@@ -91,12 +94,15 @@ def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
     """
     psproto = pyskynet_proto_dict[type_name_or_id]
     session = skynet_py_mq.csend(dst, psproto.id, None, msg_ptr, msg_size)
+    if session is None:
+        raise PySkynetCallException("send to invalid address %08x" % dst)
     ar = AsyncResult()
     local_session_to_ar[session] = ar
     re = ar.get()
     if re:
         return re
     else:
+        gevent.sleep(0.01)
         raise PySkynetCallException("call failed from %s" % dst)
 
 
@@ -148,17 +154,42 @@ def async_handle():
         gevent.spawn(async_handle)
     if type_id == SKYNET_PTYPE.PTYPE_RESPONSE:
         # TODO exception
-        ar = local_session_to_ar.pop(session)
-        ar.set((ptr, length))
+        try:
+            ar = local_session_to_ar.pop(session)
+            ar.set((ptr, length))
+        except KeyError as e:
+            hook_print("[ERROR] unknown response session: %d from %x"%(session, address))
     else:
         # TODO exception
-        psproto = pyskynet_proto_dict[type_id]
+        try:
+            psproto = pyskynet_proto_dict[type_id]
+        except KeyError as e:
+            if session != 0:
+                skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_ERROR, session, "")
+            else:
+                hook_print("[ERROR] unknown request with unexcept type_id %s, session: %d from %x"%(type_id, session, address))
+            return
         co = gevent.getcurrent()
         co_to_remote_session[co] = session
         co_to_remote_address[co] = source
-        psproto.dispatch(session, source, psproto.unpack(ptr, length))
-        if co in co_to_remote_session:
+        if callable(psproto.dispatch):
+            try:
+                psproto.dispatch(session, source, psproto.unpack(ptr, length))
+                if co in co_to_remote_session:
+                    if session != 0:
+                        hook_print("Maybe forgot response session %s from %s " % (session, source))
+                    co_to_remote_session.pop(co)
+                    co_to_remote_address.pop(co)
+            except Exception as e:
+                if session != 0:
+                    skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_ERROR, session, "")
+                hook_print("[ERROR]", traceback.format_exc())
+                if co in co_to_remote_session:
+                    co_to_remote_session.pop(co)
+                    co_to_remote_address.pop(co)
+        else:
             if session != 0:
-                print("Maybe forgot response session %s from %s " % (session, source))
-            co_to_remote_session.pop(co)
-            co_to_remote_address.pop(co)
+                skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_ERROR, session, "")
+            else:
+                hook_print("[ERROR] request with dispatch not callable, session: %d from %x"%(session, address))
+            return

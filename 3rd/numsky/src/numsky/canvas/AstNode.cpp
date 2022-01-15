@@ -21,34 +21,46 @@ namespace numsky {
 	namespace canvas {
 		IValNode* VarAstNode::eval(EvalContext *ctx) {
 			if(xlocal != NULL) {
-				ctx->assign(fi_assign);
+				if(use_dots) {
+					ctx->assign<true>(fi_assign);
+				} else {
+					ctx->assign<false>(fi_assign);
+				}
 			}
 			return NULL;
 		}
-		void VarAstNode::xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void VarAstNode::xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(xlocal != NULL || xfunction != NULL) {
 				ctx->raise(xattr->name(), "var has put local or function");
 			} else {
 				xlocal = xattr;
 			}
 		}
-		void VarAstNode::xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void VarAstNode::xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(xlocal != NULL || xfunction != NULL) {
 				ctx->raise(xattr->name(), "var has put local or function");
 			} else {
 				xfunction = xattr;
 			}
 		}
-		void VarAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void VarAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
 			if(setted) {
 				ctx->raise(data, "var can't has multi ");
 			} else {
 				setted = true;
 				if(xlocal != NULL) {
-					if(isPI) {
-						fi_assign = ctx->put_varlocal<true>(xlocal, data, data_len);
+					if(isScope) {
+						if(use_dots) {
+							fi_assign = ctx->put_varlocal<true, true>(xlocal, data, data_len);
+						} else {
+							fi_assign = ctx->put_varlocal<true, false>(xlocal, data, data_len);
+						}
 					} else {
-						fi_assign = ctx->put_varlocal<false>(xlocal, data, data_len);
+						if(use_dots) {
+							fi_assign = ctx->put_varlocal<false, true>(xlocal, data, data_len);
+						} else {
+							fi_assign = ctx->put_varlocal<false, false>(xlocal, data, data_len);
+						}
 					}
 				} else if(xfunction != NULL) {
 					ctx->put_varfunction(xfunction, data, data_len);
@@ -71,7 +83,10 @@ namespace numsky {
 			}
 			return NULL;
 		}
-		void ProcAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void ProcAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
+			if(isScope) {
+				ctx->raise(data, "don't use scope in proc ");
+			}
 			if(fi_proc > 0) {
 				ctx->raise(data, "proc data has been setted");
 			} else {
@@ -88,14 +103,14 @@ namespace numsky {
 		TypeGuard * ScalarAstNode::get_type_guard() {
 			return &type_guard;
 		}
-		void ScalarAstNode::xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void ScalarAstNode::xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			ctx->raise(xattr->name(), "scalar can't has shape");
 		}
-		void ScalarAstNode::xparse_data(ParseContext *ctx, const char*data, int data_len, bool isPI) {
+		void ScalarAstNode::xparse_data(ParseContext *ctx, const char*data, int data_len, bool isScope) {
 			if(fi_data!=0) {
 				ctx->raise(data, "scalar's data has been setted");
 			} else {
-				if(isPI) {
+				if(isScope) {
 					fi_data = ctx->put_explist<true>(data, data_len);
 				} else {
 					fi_data = ctx->put_explist<false>(data, data_len);
@@ -154,11 +169,11 @@ namespace numsky {
 
 	// LuaAstNode
 	namespace canvas {
-		void AnyAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) {
+		void AnyAstNode::xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) {
 			if(fi_data!=0) {
 				ctx->raise(data, "<any> node's data has been setted");
 			} else {
-				if(isPI) {
+				if(isScope) {
 					fi_data = ctx->put_explist<true>(data, data_len);
 				} else {
 					fi_data = ctx->put_explist<false>(data, data_len);

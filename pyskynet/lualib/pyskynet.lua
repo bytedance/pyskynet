@@ -32,6 +32,17 @@ pyskynet.self = skynet.self
 
 local foreign_seri = require "pyskynet.foreign_seri"
 
+function pyskynet.seri(...)
+	local msg_ptr, msg_size = foreign_seri.remotepack(...)
+	local re_str = skynet.tostring(msg_ptr, msg_size)
+	skynet.trash(msg_ptr, msg_size)
+	return re_str
+end
+
+function pyskynet.deseri(arg_str)
+	return foreign_seri.remoteunpack(arg_str)
+end
+
 function pyskynet.getenv(k)
 	local data = pyskynet_modify.getlenv(k)
 	return (foreign_seri.remoteunpack(data))

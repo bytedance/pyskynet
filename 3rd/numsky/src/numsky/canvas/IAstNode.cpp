@@ -1,168 +1,88 @@
 
-#include "numsky/canvas/AstNode.h"
-#include "numsky/canvas/ValNode.h"
 #include <sstream>
 #include <type_traits>
 #include <map>
+
+#include "numsky/canvas/LiteralParser.h"
+#include "numsky/canvas/AstNode.h"
+#include "numsky/canvas/ValNode.h"
 
 // node implement
 namespace numsky {
 	// IAstNode
 	namespace canvas {
-		class AttrParse {
-			std::map<std::string, void(*)(IAstNode*, ParseContext*, rapidxml::xml_attribute<>*)> nameToFunc;
-		public:
-			void parse(IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-				auto iter = nameToFunc.find(attr->name());
-				if(iter==nameToFunc.end()) {
-					ctx->raise(attr->name(), "invalid attr", iter->first);
-				} else {
-					iter->second(node, ctx, attr);
-				}
-			}
-			AttrParse() {
-				nameToFunc["name"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_name(ctx, attr);
-				};
-				nameToFunc["for"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_for(ctx, attr);
-				};
-				nameToFunc["if"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_if(ctx, attr);
-				};
-				nameToFunc["sort"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_sort(ctx, attr);
-				};
-				nameToFunc["dtype"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_dtype(ctx, attr);
-				};
-				nameToFunc["ndim"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_ndim(ctx, attr);
-				};
-				nameToFunc["len"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_len(ctx, attr);
-				};
-				nameToFunc["count"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_count(ctx, attr);
-				};
-				nameToFunc["shape"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_shape(ctx, attr);
-				};
-				nameToFunc["local"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_local(ctx, attr);
-				};
-				nameToFunc["function"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_function(ctx, attr);
-				};
-				// camera
-				nameToFunc["rot"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_rot(ctx, attr);
-				};
-				nameToFunc["pos"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_pos(ctx, attr);
-				};
-				nameToFunc["ortho"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_ortho(ctx, attr);
-				};
-				nameToFunc["perspective"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_perspective(ctx, attr);
-				};
-				// mesh
-				nameToFunc["scale"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_scale(ctx, attr);
-				};
-				nameToFunc["layer"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_layer(ctx, attr);
-				};
-				nameToFunc["fill"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_fill(ctx, attr);
-				};
-				nameToFunc["pivot"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_pivot(ctx, attr);
-				};
-				nameToFunc["size"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_size(ctx, attr);
-				};
-				nameToFunc["vertices"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_vertices(ctx, attr);
-				};
-				nameToFunc["indices"] = [](IAstNode*node, ParseContext*ctx, rapidxml::xml_attribute<>*attr) {
-					node->xparse_attr_indices(ctx, attr);
-				};
-			}
-		};
 		static AttrParse attr_parse;
 
-		void IAstNode::xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr name not implement in this tag");
+		void IAstNode::xparse_attr_xname(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr for not implement in this tag");
+		void IAstNode::xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr if not implement in this tag");
+		void IAstNode::xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr sort not implement in this tag");
+		void IAstNode::xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr dtype not implement in this tag");
+		void IAstNode::xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_ndim(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr ndim not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_len(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr len not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_count(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr count not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr shape not implement in this tag");
+		void IAstNode::xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr local not implement in this tag");
+		void IAstNode::xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr function not implement in this tag");
+		void IAstNode::xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_rot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr rot not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_pos(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr pos not implement in this tag");
-		}
-		void IAstNode::xparse_attr_ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr ortho not implement in this tag");
-		}
-		void IAstNode::xparse_attr_perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr perspective not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_scale(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr scale not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 		void IAstNode::xparse_attr_layer(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr layer not implement in this tag");
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_fill(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr fill not implement in this tag");
+		void IAstNode::xparse_attr_Ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr pivot not implement in this tag");
+		void IAstNode::xparse_attr_Perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr size not implement in this tag");
+		void IAstNode::xparse_attr_Pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr vertices not implement in this tag");
+		void IAstNode::xparse_attr_Size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
-		void IAstNode::xparse_attr_indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
-			ctx->raise(xattr->name(), "attr indices not implement in this tag");
+		void IAstNode::xparse_attr_Vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
+		}
+		void IAstNode::xparse_attr_Indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+			ctx->raise(xattr->name(), TagWrongAttrException(self_xnode, xattr));
 		}
 
 		// datas
-		void IAstNode::xparse_data(ParseContext *ctx, const char *data, int data_len, bool isPI) {
+		void IAstNode::xparse_data(ParseContext *ctx, const char *data, int data_len, bool isScope) {
 			ctx->raise(data, "xml data not implement in this tag");
+		}
+		void IAstNode::xparse_pi_reset(ParseContext *ctx, const char *data, int data_len) {
+			ctx->raise(data, "xml pi_reset not implement in this tag");
 		}
 
 		void IAstNode::xparse_children(ParseContext *ctx, rapidxml::xml_node<> *xnode) {
@@ -180,6 +100,7 @@ namespace numsky {
 		}
 
 		void IAstNode::parse_xml(ParseContext *ctx, rapidxml::xml_node<> *xnode) {
+			self_xnode = xnode;
 			line = ctx->xnode_calc_line(xnode);
 			if(xparse_has_scope()) {
 				ctx->put_do(xnode);
@@ -198,13 +119,16 @@ namespace numsky {
 					}
 				} else if(xchild->type()==rapidxml::node_pi){
 					std::string pi(xchild->name(), xchild->name_size());
-					if(pi!="lua") {
-						ctx->raise(xchild->name(), "PI target must be lua");
-					}
 					if(parsed_data) {
 						ctx->raise(xchild->value(), "node can only have one data element");
 					} else {
-						xparse_data(ctx, xchild->value(), xchild->value_size(), true);
+						if(pi=="lua") {
+							xparse_data(ctx, xchild->value(), xchild->value_size(), true);
+						} else if(pi=="reset"){
+							xparse_pi_reset(ctx, xchild->value(), xchild->value_size());
+						} else {
+							ctx->raise(xchild->name(), "PI target must be lua or reset");
+						}
 						parsed_data = true;
 					}
 				}
@@ -218,78 +142,6 @@ namespace numsky {
 	}
 	// BaseAstNode
 	namespace canvas {
-		template <numsky::MESH_BUILTIN_ENUM mesh_enum> void TagParse_recursive_put_mesh(std::map<std::string, IAstNode*(*)(BaseAstNode*, ParseContext*, rapidxml::xml_node<>*)>& nameToFunc) {
-			nameToFunc[numsky::MeshEnumVariable<mesh_enum>::mesh_name] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-				return node->xparse_child_mesh(ctx, xchild, mesh_enum);
-			};
-			TagParse_recursive_put_mesh<(numsky::MESH_BUILTIN_ENUM)(mesh_enum-1)>(nameToFunc);
-		}
-		template <> void TagParse_recursive_put_mesh<numsky::MESH_POINT>(std::map<std::string, IAstNode*(*)(BaseAstNode*, ParseContext*, rapidxml::xml_node<>*)>& nameToFunc) {
-			nameToFunc[numsky::MeshEnumVariable<numsky::MESH_POINT>::mesh_name] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-				return node->xparse_child_mesh(ctx, xchild, numsky::MESH_POINT);
-			};
-		}
-		class TagParse {
-			std::map<std::string, IAstNode*(*)(BaseAstNode*, ParseContext*, rapidxml::xml_node<>*)> nameToFunc;
-		public:
-			IAstNode* parse(BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>*attr) {
-				auto iter = nameToFunc.find(attr->name());
-				if(iter==nameToFunc.end()) {
-					ctx->raise(attr->name(), "invalid tag", iter->first);
-					return NULL;
-				} else {
-					return iter->second(node, ctx, attr);
-				}
-			}
-			TagParse() {
-				nameToFunc["any"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_any(ctx, xchild);
-				};
-				nameToFunc["var"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_var(ctx, xchild);
-				};
-				nameToFunc["proc"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_proc(ctx, xchild);
-				};
-				nameToFunc["table"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_table(ctx, xchild);
-				};
-				nameToFunc["block"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_block(ctx, xchild);
-				};
-				nameToFunc["camera"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_camera(ctx, xchild);
-				};
-				// arr
-				nameToFunc["arr"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_arr(ctx, xchild, 0);
-				};
-				for(int i=1;i<=CANVAS_MAX_DIM;i++) {
-					std::string tag = std::string("arr") + std::to_string(i) + std::string("d");
-					nameToFunc[tag] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-						const char* name = xchild->name();
-						if(name[4] == 'd') {
-							return node->xparse_child_arr(ctx, xchild, name[3] - '0');
-						} else {
-							return node->xparse_child_arr(ctx, xchild, 10*(name[3] - '0') + name[4]- '0');
-						}
-					};
-				}
-				// scalar
-				for(size_t i=0;i<sizeof(NS_DTYPE_CHARS);i++) {
-					numsky_dtype *try_dtype = numsky_get_dtype_by_char(NS_DTYPE_CHARS[i]);
-					nameToFunc[try_dtype->name] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-						numsky_dtype *dtype = ctx->try_parse_dtype(xchild->name());
-						return node->xparse_child_scalar(ctx, xchild, dtype);
-					};
-				}
-				// mesh
-				nameToFunc["mesh"] = [](BaseAstNode*node, ParseContext*ctx, rapidxml::xml_node<>* xchild)->IAstNode*{
-					return node->xparse_child_mesh(ctx, xchild, -1);
-				};
-				TagParse_recursive_put_mesh<numsky::MESH_SECTOR>(nameToFunc);
-			}
-		};
 		static TagParse tag_parse;
 
 		BaseAstNode::~BaseAstNode() {
@@ -350,10 +202,10 @@ namespace numsky {
 				(*iter)->post_parse(ctx);
 			}
 		}
-		void BaseAstNode::xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BaseAstNode::xparse_attr_xname(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			xname = xattr->value();
 		}
-		void BaseAstNode::xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BaseAstNode::xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			std::string value(xattr->value(), xattr->value_size());
 			for(auto iter=value.begin();iter!=value.end();++iter) {
 				if(*iter == '\t' || *iter == '\n' || *iter == '\r') {
@@ -370,7 +222,7 @@ namespace numsky {
 				ctx->raise(xattr->name(), "for syntax error");
 			}
 		}
-		void BaseAstNode::xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BaseAstNode::xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			std::string value(xattr->value(), xattr->value_size());
 			if(ctrl.fi_if > 0) {
 				ctx->raise(xattr->name(), "if attr has been defined");
@@ -378,7 +230,7 @@ namespace numsky {
 				ctrl.fi_if = ctx->put_if(xattr, value);
 			}
 		}
-		void BaseAstNode::xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BaseAstNode::xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			if(ctrl.fi_forvar == 0) {
 				ctx->raise(xattr->name(), "use for before sort");
 				return ;
@@ -395,7 +247,7 @@ namespace numsky {
 				ctx->raise(xattr->name(), "this node can't has len");
 			}
 		}
-		void BaseAstNode::xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
+		void BaseAstNode::xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) {
 			TypeGuard *guard = get_type_guard();
 			if(guard) {
 				guard->si_shape = ctx->put_static_explist(xattr);
@@ -417,7 +269,7 @@ namespace numsky {
 				ctx->raise(xnode->name(), "this element cannot has var as child");
 				return NULL;
 			} else {
-				IAstNode *child = new VarAstNode();
+				IAstNode *child = new VarAstNode(false);
 				child->parse_xml(ctx, xnode);
 				return child;
 			}

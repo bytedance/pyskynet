@@ -1,7 +1,5 @@
+#include "lua-serialize.c"
 
-#include "lua-seri.c"
-
-#include "skynet_foreign/skynet_foreign.h"
 #include "skynet_foreign/numsky.h"
 
 #define TYPE_FOREIGN_USERDATA 7
@@ -41,7 +39,7 @@ inline static void foreign_rball_init(struct foreign_read_block * rb, char * buf
 inline static bool foreign_rb_uint(struct foreign_read_block* rb, npy_intp *value) {
 	npy_intp result = 0;
 	for (uint32_t shift = 0; shift <= 63; shift += 7) {
-		uint8_t *p_byte = rb_read(rb_cast(rb), 1);
+		uint8_t *p_byte = (uint8_t*)rb_read(rb_cast(rb), 1);
 		if(p_byte==NULL) {
 			return false;
 		}
@@ -261,7 +259,7 @@ unpack_ns_arr(struct foreign_read_block *rb, int nd) {
 	char *dataptr;
 	if(rb->mode==MODE_FOREIGN) {
 		numsky_ndarray_autocount(arr);
-		npy_intp *strides = foreign_rb_read(rb, sizeof(npy_intp)*nd);
+		npy_intp *strides = (npy_intp*)foreign_rb_read(rb, sizeof(npy_intp)*nd);
 		if(strides == NULL) {
 			numsky_ndarray_destroy(arr);
 			return NULL;
@@ -295,7 +293,7 @@ unpack_ns_arr(struct foreign_read_block *rb, int nd) {
 		// 4. alloc foreign_base
 		size_t datasize = arr->count*arr->dtype->elsize;
 		// 1) read & copy
-		char * pdata = foreign_rb_read(rb, datasize);
+		char * pdata = (char*)foreign_rb_read(rb, datasize);
 		if(pdata==NULL){
 			numsky_ndarray_destroy(arr);
 			return NULL;
@@ -318,7 +316,7 @@ static void foreign_unpack_one(lua_State *L, struct foreign_read_block *rb);
 static void foreign_unpack_table(lua_State *L, struct foreign_read_block *rb, int array_size) {
 	if (array_size == MAX_COOKIE-1) {
 		uint8_t type;
-		uint8_t *t = foreign_rb_read(rb, sizeof(type));
+		uint8_t *t = (uint8_t*)foreign_rb_read(rb, sizeof(type));
 		if (t==NULL) {
 			invalid_stream(L,rb_cast(rb));
 		}
@@ -378,7 +376,7 @@ static void foreign_push_value(lua_State *L, struct foreign_read_block *rb, int 
 
 static void foreign_unpack_one(lua_State *L, struct foreign_read_block *rb) {
 	uint8_t type;
-	uint8_t *t = foreign_rb_read(rb, sizeof(type));
+	uint8_t *t = (uint8_t*)foreign_rb_read(rb, sizeof(type));
 	if (t==NULL) {
 		invalid_stream(L, rb_cast(rb));
 	}
@@ -409,7 +407,7 @@ int foreign_unpack(lua_State *L, int mode){
 
 	lua_settop(L,1);
 	struct foreign_read_block rb;
-	foreign_rball_init(&rb, buffer, len, mode);
+	foreign_rball_init(&rb, (char*)buffer, len, mode);
 
 	int i;
 	for (i=0;;i++) {
@@ -417,7 +415,7 @@ int foreign_unpack(lua_State *L, int mode){
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
 		}
 		uint8_t type = 0;
-		uint8_t *t = foreign_rb_read(&rb, sizeof(type));
+		uint8_t *t = (uint8_t*)foreign_rb_read(&rb, sizeof(type));
 		if (t==NULL)
 			break;
 		type = *t;
@@ -453,6 +451,43 @@ static int lremoteunpack(lua_State *L) {
 	return foreign_unpack(L, MODE_FOREIGN_REMOTE);
 }
 
+static int ltostring(lua_State *L) {
+	int t = lua_type(L,1);
+	switch (t) {
+	case LUA_TSTRING: {
+		lua_settop(L, 1);
+		return 1;
+	}
+	case LUA_TLIGHTUSERDATA: {
+		char * msg = (char*)lua_touserdata(L,1);
+		int sz = luaL_checkinteger(L,2);
+		lua_pushlstring(L,msg,sz);
+		return 1;
+	}
+	default:
+		return 0;
+	}
+}
+
+static int ltrash(lua_State *L) {
+	int t = lua_type(L,1);
+	switch (t) {
+	case LUA_TSTRING: {
+		break;
+	}
+	case LUA_TLIGHTUSERDATA: {
+		void * msg = lua_touserdata(L,1);
+		luaL_checkinteger(L,2);
+		skynet_free(msg);
+		break;
+	}
+	default:
+		luaL_error(L, "skynet.trash invalid param %s", lua_typename(L,t));
+	}
+
+	return 0;
+}
+
 static const struct luaL_Reg l_methods[] = {
     { "luapack" , lluapack },
     { "luaunpack", lluaunpack },
@@ -460,10 +495,12 @@ static const struct luaL_Reg l_methods[] = {
     { "unpack" , lunpack },
     { "remotepack", lremotepack },
     { "remoteunpack", lremoteunpack },
+    { "tostring", ltostring },
+    { "trash", ltrash },
     { NULL,  NULL },
 };
 
-LUAMOD_API int
+LUA_API int
 luaopen_pyskynet_foreign_seri(lua_State *L) {
 	luaL_checkversion(L);
 

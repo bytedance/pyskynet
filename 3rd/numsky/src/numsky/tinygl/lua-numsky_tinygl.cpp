@@ -1,8 +1,6 @@
 #include "numsky/lua-numsky.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/tinygl/lua-numsky_tinygl.h"
-#include "tinygl/Camera.h"
-#include "tinygl/Screen.h"
 
 static int lmesh_setColor(lua_State *L) {
 	auto mesh = luabinding::ClassUtil<tinygl::Mesh>::check(L, 1);
@@ -139,8 +137,6 @@ static int lcamera_del(lua_State*L) {
 }
 
 namespace luabinding {
-    template <> const char* Class_<tinygl::Mesh>::metaname= "tinygl.mesh";
-
     template <> void Class_<tinygl::Mesh>::clazz(Class_<tinygl::Mesh> & c1) {
 		c1.setMetaFunction("__gc", lmesh_del)
 			.setMetaDefaultIndex()
@@ -171,8 +167,6 @@ namespace luabinding {
 } // namespace luabinding
 
 namespace luabinding {
-	template <> const char* Class_<tinygl::Camera>::metaname= "tinygl.camera";
-
     template <> void Class_<tinygl::Camera>::clazz(Class_<tinygl::Camera>& c2) {
 		c2.setMetaFunction("__gc", lcamera_del)
 			.setMetaDefaultIndex()

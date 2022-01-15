@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 #include "numsky/ufunc/lua-numsky_ufunc.h"
 
@@ -188,7 +187,7 @@ namespace _ufunc_11 {
 
 } // namespace _ufunc_11
 
-#define make_ufunc(vName) \
+#define make_ufunc11(vName) \
 template <> const numsky_ufunc numsky::ufunc_instance<numsky::UFUNC_##vName>::ufunc = { \
 	1, \
 	1, \
@@ -199,23 +198,23 @@ template <> const numsky_ufunc numsky::ufunc_instance<numsky::UFUNC_##vName>::uf
 	numsky::UFUNC_##vName, \
 }
 
-make_ufunc(unm);
-make_ufunc(bnot);
-make_ufunc(abs);
-make_ufunc(ceil);
-make_ufunc(floor);
+make_ufunc11(unm);
+make_ufunc11(bnot);
+make_ufunc11(abs);
+make_ufunc11(ceil);
+make_ufunc11(floor);
 
-make_ufunc(acos);
-make_ufunc(asin);
-make_ufunc(atan);
-make_ufunc(cos);
-make_ufunc(sin);
-make_ufunc(tan);
-make_ufunc(deg);
-make_ufunc(rad);
+make_ufunc11(acos);
+make_ufunc11(asin);
+make_ufunc11(atan);
+make_ufunc11(cos);
+make_ufunc11(sin);
+make_ufunc11(tan);
+make_ufunc11(deg);
+make_ufunc11(rad);
 
-make_ufunc(log);
-make_ufunc(exp);
-make_ufunc(sqrt);
+make_ufunc11(log);
+make_ufunc11(exp);
+make_ufunc11(sqrt);
 
 

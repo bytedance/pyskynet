@@ -36,10 +36,6 @@ namespace numsky {
 			child->parse_xml(ctx, xnode);
 			return child;
 		}
-		BaseAstNode* AbstractLuaAstNode::xparse_child_mesh(ParseContext *ctx, rapidxml::xml_node<> *xnode, int mesh_enum) {
-			ctx->raise(xnode->name(), "TODO");
-			return NULL;
-		}
 		bool AbstractLuaAstNode::xparse_has_scope() {
 			return true;
 		}
@@ -61,12 +57,13 @@ namespace numsky {
 	}
 }
 
-void numsky_canvas::xparse_data(numsky::canvas::ParseContext *ctx, const char*data, int data_len, bool isPI) {
-	if(isPI) {
-		ctx->put_global(data, data_len);
-	} else {
-		ctx->raise(data, "impossible case");
-	}
+void numsky_canvas::xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) {
+	ctx->put_global(data, data_len);
+}
+numsky::canvas::IAstNode* numsky_canvas::xparse_child_var(numsky::canvas::ParseContext *ctx, rapidxml::xml_node<> *xnode) {
+	numsky::canvas::IAstNode *child = new numsky::canvas::VarAstNode(true);
+	child->parse_xml(ctx, xnode);
+	return child;
 }
 
 numsky::canvas::IValNode* numsky_canvas::eval(numsky::canvas::EvalContext *ctx) {

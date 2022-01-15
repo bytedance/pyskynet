@@ -72,11 +72,15 @@ namespace luabinding {
 				unqlite_int64 valueLen = BUFFER_LENGTH;
 				std::unique_ptr<char[]> value(new char[valueLen]);
 				int rc = unqlite_kv_fetch(pDbExt->db,key,keyLen,value.get(),&valueLen);
-				if(rc != UNQLITE_OK) {
+                if(rc == UNQLITE_NOTFOUND) {
+                    lua_pushnil(L);
+                    return 1;
+                } else if(rc == UNQLITE_OK) {
+                    lua_pushlstring(L, value.get(), valueLen);
+                    return 1;
+				} else {
 					return luaL_error(L, "unqlite fetch failed %d", rc);
-				}
-				lua_pushlstring(L, value.get(), valueLen);
-				return 1;
+                }
 			})
 		.setFieldFunction("delete", [](lua_State*L) -> int {
 				unqlite_ext *pDbExt = luabinding::ClassUtil<unqlite_ext>::check(L, 1);
@@ -127,7 +131,7 @@ namespace luabinding {
 		size_t len = 0;
 		const char * name = luaL_checklstring(L, 1, &len);
 		unqlite *pDb;
-		int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_CREATE);
+		int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_CREATE | UNQLITE_OPEN_OMIT_JOURNALING);
 		if( rc != UNQLITE_OK ) {
 			return luaL_error(L, "unqlite open failed %d", rc);
 		}
@@ -136,6 +140,21 @@ namespace luabinding {
 		pDbExt->closed = false;
 		return 1;
 	}
+
+}
+
+int unqlite_readonly(lua_State*L) {
+	size_t len = 0;
+	const char * name = luaL_checklstring(L, 1, &len);
+	unqlite *pDb;
+	int rc = unqlite_open(&pDb, name, UNQLITE_OPEN_READONLY | UNQLITE_OPEN_OMIT_JOURNALING);
+	if( rc != UNQLITE_OK ) {
+		return luaL_error(L, "unqlite open failed %d", rc);
+	}
+	unqlite_ext *pDbExt = luabinding::ClassUtil<unqlite_ext>::newalloc(L);
+	pDbExt->db = pDb;
+	pDbExt->closed = false;
+	return 1;
 }
 
 // unqlite.cursor
@@ -313,6 +332,7 @@ extern "C" {
         // 1. unqlite database
 		luabinding::ClassUtil<unqlite_ext>::bind(L);
 		m.setFunction("open", luabinding::Class_<unqlite_ext>::ctor);
+		m.setFunction("readonly", unqlite_readonly);
 
         // 2. unqlite cursor
 		luabinding::ClassUtil<unqlite_cursor_ext>::bind(L);

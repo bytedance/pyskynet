@@ -1,5 +1,4 @@
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 
@@ -11,20 +10,12 @@
  * flatten & reshape & copy & astype *
  *************************************/
 
-template <typename Told, typename Tnew> static void _ndarray_copy(numsky_ndarray* old_arr, numsky_ndarray* new_arr) {
-	char *new_dataptr = new_arr->dataptr;
-	numsky::ndarray_foreach(old_arr, [&](numsky_nditer* iter) {
-		numsky::dataptr_cast<Tnew>(new_dataptr) = numsky::dataptr_cast<Told>(iter->dataptr);
-		new_dataptr += sizeof(Tnew);
-	});
-}
-
 int numsky::ndarray_methods_flatten(lua_State *L) {
 	auto old_arr = luabinding::ClassUtil<numsky_ndarray>::check(L, 1);
 	auto new_arr_ptr = numsky::ndarray_new_alloc<true>(L, 1, old_arr->dtype->typechar, [&](int)-> npy_intp {
 			return old_arr->count;
 	});
-	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr_ptr->dtype->typechar, _ndarray_copy)(old_arr, new_arr_ptr.get());
+	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr_ptr->dtype->typechar, numsky::ndarray_t_copyto)(old_arr, new_arr_ptr->dataptr);
 	return 1;
 }
 
@@ -55,7 +46,7 @@ int numsky::ndarray_methods_reshape(lua_State *L) {
 				numsky::shape_str(old_arr).c_str(),
 				numsky::shape_str(new_arr).c_str());
 	}
-	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr->dtype->typechar, _ndarray_copy)(old_arr, new_arr);
+	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr->dtype->typechar, numsky::ndarray_t_copyto)(old_arr, new_arr->dataptr);
 	return 1;
 }
 
@@ -66,7 +57,7 @@ int numsky::ndarray_methods_astype(lua_State *L) {
 			return old_arr->dimensions[i];
 	});
 	auto new_arr = new_arr_ptr.get();
-	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr->dtype->typechar, _ndarray_copy)(old_arr, new_arr);
+	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr->dtype->typechar, numsky::ndarray_t_copyto)(old_arr, new_arr->dataptr);
 	return 1;
 }
 
@@ -75,7 +66,7 @@ int numsky::ndarray_methods_copy(lua_State *L) {
 	auto new_arr_ptr = numsky::ndarray_new_alloc<true>(L, old_arr->nd, old_arr->dtype->typechar, [&](int i)-> npy_intp {
 			return old_arr->dimensions[i];
 	});
-	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr_ptr->dtype->typechar, _ndarray_copy)(old_arr, new_arr_ptr.get());
+	lnumsky_template_fp2(L, old_arr->dtype->typechar, new_arr_ptr->dtype->typechar, numsky::ndarray_t_copyto)(old_arr, new_arr_ptr->dataptr);
 	return 1;
 }
 

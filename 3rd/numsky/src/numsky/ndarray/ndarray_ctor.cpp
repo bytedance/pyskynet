@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 
 

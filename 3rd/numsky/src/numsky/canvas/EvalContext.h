@@ -10,8 +10,8 @@
 #include "numsky/canvas/AstNode.h"
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lauxlib.h"
 }
 
 namespace numsky {
@@ -136,12 +136,16 @@ namespace numsky {
 					lua_geti(L, ft_stacki, fi_proc);
 					lua_call(L, 0, 0);
 				}
-				inline void assign(int fi_assign) {
+				template <bool USE_DOTS> inline void assign(int fi_assign) {
 					lua_geti(L, ft_stacki, fi_assign);
-					for(int i=0;i<nargs;i++) {
-						lua_pushvalue(L, i+2);
+					if(USE_DOTS) {
+						for(int i=0;i<nargs;i++) {
+							lua_pushvalue(L, i+2);
+						}
+						lua_call(L, nargs, 0);
+					} else {
+						lua_call(L, 0, 0);
 					}
-					lua_call(L, nargs, 0);
 				}
                 template <typename TFunc> inline void forin(int fi_forvar, int fi_forgen, TFunc iteratee){
                     int bottom1 = lua_gettop(L);

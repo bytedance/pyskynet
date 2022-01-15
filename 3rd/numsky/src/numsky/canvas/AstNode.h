@@ -16,17 +16,18 @@ namespace numsky {
 		};
 
 		class VarAstNode : public ConAstNode {
+			bool use_dots;
 			rapidxml::xml_attribute<> *xlocal;
 			rapidxml::xml_attribute<> *xfunction;
 			int fi_assign;
 			bool setted;
 		protected:
-			void xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) final;
 			void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 		public:
-			VarAstNode(): xlocal(NULL), xfunction(NULL), fi_assign(0), setted(false) {}
+			VarAstNode(bool v_use_dots): use_dots(v_use_dots), xlocal(NULL), xfunction(NULL), fi_assign(0), setted(false) {}
 			IValNode* eval(EvalContext *ctx) final;
 		};
 
@@ -47,8 +48,8 @@ namespace numsky {
 			char* (*cpy_func)(lua_State*L, char *left, char *right, int count);
 			int (*lcpy_func)(lua_State*L, char *dataptr, int count);
 		protected:
-			void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isPI) final;
+			void xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_data(ParseContext *ctx, const char* data, int data_len, bool isScope) final;
 			void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 
 		public:

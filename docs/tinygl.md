@@ -5,11 +5,11 @@
 
 ### Example
 ```
-<camera ortho="-10,10,-10,10" shape="20,20,3">
-	<rect size="1,1" pos="1,1" rot="80" scale="1,1" layer="1">
-        255,255,255 -- 填充channel
-	</rect>
-</camera>
+<Camera Ortho="-10,10,-10,10" shape="20,20,3">
+	<Rect Size="1,1" pos="1,1" rot="80" scale="1,1" layer="1">
+        255,255,255 -- fill channel
+	</Rect>
+</Camera>
 ```
 * [example_tinygl.py](../examples/example_tinygl.py)
 
@@ -19,23 +19,19 @@
 
 | **attribute**           | **description**         |
 |:------------------:|:----------------:|
-| ```static attribute:``` |
-| ```ortho```         |```orthogonal projection's parameter，left,right,bottom,top[,near,far]```|
-| ```perspective```   |```perspective projection's parameter，fovy,aspect,near,far```|
-| ```shape```         |```height、width、channel```|
-| ```dynamic attribute:``` |
+| ```Ortho```         |```orthogonal projection's parameter，left,right,bottom,top[,near,far]```|
+| ```Perspective```   |```perspective projection's parameter，fovy,aspect,near,far```|
+| ```Shape```         |```height、width、channel```|
 | ```pos```         |```position，(x,y), (x,y,z)```|
-| ```rot```         |```rotation，degree angle，(rotZ,) (rotX,rotY,rotZ) just like unity```|
+| ```rot```         |```rotation，degree angle，(rotZ,) (rotX,rotY,rotZ) like unity```|
 
 * mesh
 
 | **attribute**           | **description**         |
 |:------------------:|:----------------:|
-| ```static attribute:``` |
-| ```fill```         |```fill type, point/line/triangle```|
-| ```vertices```     |```vertex array, numsky.ndarray object. shape is (n,3), dtype is float```|
-| ```indices```     |```face array, index for vertex array index start from 1. numsky.ndarray object, shape is (n,3), dtype is int```|
-| ```dynamic attribute:``` |
+| ```x-type```         |```fill type, point/line/triangle```|
+| ```Vertices```     |```vertex array, numsky.ndarray object. shape is (n,3), dtype is float```|
+| ```Indices```     |```face array, index for vertex array index start from 1. numsky.ndarray object, shape is (n,3), dtype is int```|
 | ```pos```         |``````|
 | ```rot```         |``````|
 | ```scale```         |``````|
@@ -45,11 +41,9 @@
 
 | **attribute**           | **description**         |
 |:------------------:|:----------------:|
-| ```static attribute:``` |
-| ```fill```         |```fill type，point/line/triangle```|
-| ```size```         |```some parameter for builtin mesh```|
-| ```pivot```         |```center for rotation and scale```|
-| ```dynamic attribute:``` |
+| ```x-type```         |```fill type，point/line/triangle```|
+| ```Size```         |```some parameter for builtin mesh```|
+| ```Pivot```         |```center for rotation and scale```|
 | ```pos```         |``````|
 | ```rot```         |``````|
 | ```scale```         |```scale (x,y), (x,y,z)```|

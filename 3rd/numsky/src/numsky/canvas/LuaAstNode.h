@@ -15,7 +15,6 @@ namespace numsky {
 			BaseAstNode *xparse_child_arr(ParseContext *ctx, rapidxml::xml_node<> *xnode, int child_ndim) final;
 			BaseAstNode *xparse_child_scalar(ParseContext *ctx, rapidxml::xml_node<> *xnode, numsky_dtype *scalar_dtype) final;
 			BaseAstNode *xparse_child_camera(ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
-			BaseAstNode* xparse_child_mesh(ParseContext *ctx, rapidxml::xml_node<> *xnode, int mesh_enum) final;
 			bool xparse_has_scope() final;
 		public:
 			AbstractLuaAstNode(): BaseAstNode() {}
@@ -44,7 +43,8 @@ private:
 	rapidxml::xml_document<> xml_doc; // xml document
 
 protected:
-	void xparse_data(numsky::canvas::ParseContext *ctx, const char*data, int data_len, bool isPI) final;
+	void xparse_pi_reset(numsky::canvas::ParseContext *ctx, const char*data, int data_len) final;
+	numsky::canvas::IAstNode* xparse_child_var(numsky::canvas::ParseContext *ctx, rapidxml::xml_node<> *xnode) final;
 
 public:
 	friend class numsky::canvas::ReturnValNode;

@@ -28,6 +28,10 @@ namespace numsky {
 				return iter->second;
 			}
 		}
+		void ParseContext::raise(const char *where, const DefinedException & e) {
+			std::string msg = e.tostring();
+			luaL_error(L, "xml:ParseError:line:%d, %s", calc_line(where), msg.c_str());
+		}
 		void ParseContext::raise(const char *where, const char* what) {
 			luaL_error(L, "xml:ParseError:line:%d, %s", calc_line(where), what);
 		}

@@ -38,17 +38,21 @@ remoteunpack = foreign_seri.remoteunpack
 
 
 def __foreign_dispatch(session, source, argtuple):
+    ret = CMD(*argtuple)
     if session != 0:
-        pyskynet_proto.ret(*foreign_seri.pack(CMD(*argtuple)))
-    else:
-        CMD(*argtuple)
+        if type(ret) == tuple:
+            pyskynet_proto.ret(*foreign_seri.pack(*ret))
+        else:
+            pyskynet_proto.ret(*foreign_seri.pack(ret))
 
 
 def __foreign_remote_dispatch(session, source, argtuple):
+    ret = CMD(*argtuple)
     if session != 0:
-        pyskynet_proto.ret(*foreign_seri.remotepack(CMD(*argtuple)))
-    else:
-        CMD(*argtuple)
+        if type(ret) == tuple:
+            pyskynet_proto.ret(*foreign_seri.remotepack(*ret))
+        else:
+            pyskynet_proto.ret(*foreign_seri.remotepack(ret))
 
 
 # dispatch foreign message

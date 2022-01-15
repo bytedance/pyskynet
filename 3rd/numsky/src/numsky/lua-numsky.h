@@ -2,8 +2,8 @@
 #pragma once
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lauxlib.h"
 }
 #include <stdint.h>
 #include <stdlib.h>
@@ -225,3 +225,5 @@ template <typename T> inline void dataptr_from_int64(char *dataptr, int64_t valu
 }
 
 } // namespace numsky
+
+void lnumsky_tuple_bind_lib(luabinding::Module_& m);

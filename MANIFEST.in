@@ -18,6 +18,8 @@ recursive-include skynet/skynet-src *
 recursive-include skynet/lualib-src *
 recursive-include skynet/service-src *
 
+include setup_ext.py
+
 global-exclude *.so
 global-exclude *.o
 global-exclude *.pyc

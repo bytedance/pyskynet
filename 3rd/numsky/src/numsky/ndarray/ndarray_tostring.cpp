@@ -1,7 +1,6 @@
 #include <sstream>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 #include "numsky/ndarray/lua-numsky_ndarray.h"
 
 template <typename T> int _ndarray__tostring(lua_State *L, struct numsky_ndarray* arr) {

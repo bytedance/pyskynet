@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "numsky/lua-numsky.h"
-#include "numsky/lua-numsky_module.h"
 
 #define lnumsky_template_fp2t2(L, typechar1, T2, tfunc) ([] (lua_State* _L, char tc1) -> decltype(tfunc<bool, T2>)* { \
 decltype(tfunc<bool, T2>) * name = NULL;\
@@ -81,6 +80,24 @@ namespace numsky {
 		for(npy_intp n=0;n<arr->count;n++) {
 			func(ptr.get());
 			numsky_nditer_next(ptr.get());
+		}
+	}
+
+	template <typename TArr, typename TBuffer> void ndarray_t_copyfrom(numsky_ndarray* arr, char *dataptr) {
+		auto iter = ndarray_nditer(arr);
+		for(npy_intp n=0;n<arr->count;n++) {
+			numsky::dataptr_cast<TArr>(iter->dataptr) = numsky::dataptr_cast<TBuffer>(dataptr);
+			dataptr += sizeof(TBuffer);
+			numsky_nditer_next(iter.get());
+		}
+	}
+
+	template <typename TArr, typename TBuffer> void ndarray_t_copyto(numsky_ndarray* arr, char *dataptr) {
+		auto iter = ndarray_nditer(arr);
+		for(npy_intp n=0;n<arr->count;n++) {
+			numsky::dataptr_cast<TBuffer>(dataptr) = numsky::dataptr_cast<TArr>(iter->dataptr);
+			dataptr += sizeof(TBuffer);
+			numsky_nditer_next(iter.get());
 		}
 	}
 

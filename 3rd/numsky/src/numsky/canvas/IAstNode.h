@@ -22,46 +22,48 @@ namespace numsky {
 
 		class IAstNode {
 		public:
+			rapidxml::xml_node<>* self_xnode;
 			int line;
 			IAstNode() : line(0) {}
 			friend class AttrParse;
+			template <int A> friend struct AttrDesc;
 		protected:
 			// attrs
-			virtual void xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xname(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// control
-			virtual void xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// type
-			virtual void xparse_attr_dtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xtype(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_ndim(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_len(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_count(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// var
-			virtual void xparse_attr_local(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_function(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xlocal(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_xfunction(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// graphic
 			virtual void xparse_attr_rot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 			virtual void xparse_attr_pos(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			// graphic camera
-			virtual void xparse_attr_ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			// graphic mesh
 			virtual void xparse_attr_scale(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			// graphic camera
+			virtual void xparse_attr_Ortho(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Perspective(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			// graphic mesh
 			virtual void xparse_attr_layer(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_fill(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
-			virtual void xparse_attr_indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Pivot(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Size(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Vertices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
+			virtual void xparse_attr_Indices(ParseContext *ctx, rapidxml::xml_attribute<> *xattr);
 
 			// datas
-			virtual void xparse_data(ParseContext *ctx, const char *data, int data_len, bool isPI);
+			virtual void xparse_data(ParseContext *ctx, const char *data, int data_len, bool isScope);
+			virtual void xparse_pi_reset(ParseContext *ctx, const char *data, int data_len);
 			virtual void xparse_children(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 			virtual void xparse_finish(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 
@@ -87,16 +89,17 @@ namespace numsky {
 			ExpandControl ctrl;
 			std::vector<IAstNode*> children;
 			friend class TagParse;
+			template <int A> friend struct TagDesc;
 
 		protected:
 			// attrs
-			void xparse_attr_name(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_if(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_sort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
-			void xparse_attr_for(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xname(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xif(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xsort(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
+			void xparse_attr_xfor(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) final;
 
 			void xparse_attr_len(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;
-			void xparse_attr_shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;
+			void xparse_attr_Shape(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;
 			void xparse_attr_count(ParseContext *ctx, rapidxml::xml_attribute<> *xattr) override;
 
 			// datas
@@ -113,7 +116,7 @@ namespace numsky {
 			virtual BaseAstNode* xparse_child_mesh(ParseContext *ctx, rapidxml::xml_node<> *xnode, int mesh_enum);
 
 		protected:
-			IAstNode* xparse_child_var(ParseContext *ctx, rapidxml::xml_node<> *xnode);
+			virtual IAstNode* xparse_child_var(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 			IAstNode* xparse_child_proc(ParseContext *ctx, rapidxml::xml_node<> *xnode);
 
 		public:
@@ -144,5 +147,7 @@ namespace numsky {
 		};
 
 		class ReturnValNode;
+
+		int enum_tag_attr(lua_State*L);
 	}
 }
