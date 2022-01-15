@@ -4,59 +4,38 @@
 
 #include "foreign_seri/write_block.h"
 
-inline static struct block *
-blk_alloc(void) {
-	struct block *b = (struct block*)skynet_malloc(sizeof(struct block));
-	b->next = NULL;
-	return b;
-}
-
-inline static void wb_push(struct write_block *b, const void *buf, int sz) {
-	const char * buffer = (const char*)buf;
-	if (b->ptr == BLOCK_SIZE) {
-_again:
-		b->current = b->current->next = blk_alloc();
-		b->ptr = 0;
+inline static void wb_push(struct write_block *wb, const void *data, int64_t sz) {
+	int64_t newCapacity = wb->capacity;
+	while(newCapacity < wb->len + sz) {
+		newCapacity *= 2;
 	}
-	if (b->ptr <= BLOCK_SIZE - sz) {
-		memcpy(b->current->buffer + b->ptr, buffer, sz);
-		b->ptr+=sz;
-		b->len+=sz;
-	} else {
-		int copy = BLOCK_SIZE - b->ptr;
-		memcpy(b->current->buffer + b->ptr, buffer, copy);
-		buffer += copy;
-		b->len += copy;
-		sz -= copy;
-		goto _again;
+	if(newCapacity != wb->capacity) {
+		char *newBuffer = skynet_malloc(newCapacity);
+		memcpy(newBuffer, wb->buffer, wb->len);
+		skynet_free(wb->buffer);
+		wb->buffer = newBuffer;
+		wb->capacity = newCapacity;
 	}
+	memcpy(wb->buffer + wb->len, data, sz);
+	wb->len += sz;
 }
 
-void wb_write(struct write_block *wb, const void *buf, int sz) {
-    wb_push((wb), buf, sz);
+void wb_write(struct write_block *wb, const void *buf, int64_t sz) {
+    wb_push(wb, buf, sz);
 }
 
-void wb_init(struct write_block *wb , struct block *b, bool refarr) {
-	wb->head = b;
-	assert(b->next == NULL);
+void wb_init(struct write_block *wb, int mode) {
+	wb->buffer = skynet_malloc(BLOCK_SIZE);
+	wb->capacity = BLOCK_SIZE;
 	wb->len = 0;
-	wb->current = wb->head;
-	wb->ptr = 0;
-	wb->refarr = refarr;
+	wb->mode = mode;
 }
 
 void wb_free(struct write_block *wb) {
-	struct block *blk = wb->head;
-	blk = blk->next;	// the first block is on stack
-	while (blk) {
-		struct block * next = blk->next;
-		skynet_free(blk);
-		blk = next;
+	if(wb->buffer){
+		skynet_free(wb->buffer);
+		wb->buffer = NULL;
 	}
-	wb->head = NULL;
-	wb->current = NULL;
-	wb->ptr = 0;
-	wb->len = 0;
 }
 
 void wb_nil(struct write_block *wb) {
@@ -242,20 +221,22 @@ inline static void wb_ns_arr(struct write_block *wb, struct numsky_ndarray* arr_
 	for(int i=0;i<arr_obj->nd;i++) {
 		wb_uint(wb, arr_obj->dimensions[i]);
 	}
-	if (wb->refarr) {
+	if (wb->mode == MODE_FOREIGN_REF) {
 		// 4. strides
 		wb_push(wb, arr_obj->strides, sizeof(npy_intp)*arr_obj->nd);
 		// 5. data
 		skynet_foreign_incref(arr_obj->foreign_base);
 		wb_push(wb, &(arr_obj->foreign_base), sizeof(arr_obj->foreign_base));
 		wb_push(wb, &(arr_obj->dataptr), sizeof(arr_obj->dataptr));
-	} else {
+	} else if (wb->mode == MODE_FOREIGN_REMOTE){
 		// 4. data
 		struct numsky_nditer * iter = numsky_nditer_create(arr_obj);
 		for(int i=0;i<iter->ao->count;numsky_nditer_next(iter), i++) {
 			wb_push(wb, iter->dataptr, dtype->elsize);
 		}
 		numsky_nditer_destroy(iter);
+	} else {
+		// error branch
 	}
 }
 
@@ -305,12 +286,15 @@ pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 			wb_free(wb);
 			luaL_error(L, "numsky.ndarray's nd must be <= 31");
 		}
-		if (wb->refarr) {
+		if (wb->mode == MODE_FOREIGN_REF) {
 			if(arr->foreign_base == NULL) {
 				wb_free(wb);
 				luaL_error(L, "foreign -base can't be null");
 				return ;
 			}
+		} else if(wb->mode != MODE_FOREIGN_REMOTE) {
+			wb_free(wb);
+			luaL_error(L, "lua pack can't take numsky array");
 		}
 		wb_ns_arr(wb, arr);
 		break;
@@ -321,40 +305,15 @@ pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	}
 }
 
-static void
-seri(lua_State *L, struct block *b, int len) {
-	uint8_t * buffer = (uint8_t*)skynet_malloc(len);
-	uint8_t * ptr = buffer;
-	int sz = len;
-	while(len>0) {
-		if (len >= BLOCK_SIZE) {
-			memcpy(ptr, b->buffer, BLOCK_SIZE);
-			ptr += BLOCK_SIZE;
-			len -= BLOCK_SIZE;
-			b = b->next;
-		} else {
-			memcpy(ptr, b->buffer, len);
-			break;
-		}
-	}
-
-	lua_pushlightuserdata(L, buffer);
-	lua_pushinteger(L, sz);
-}
-
-int lua_pack(lua_State *L, bool refarr) {
-	struct block temp;
-	temp.next = NULL;
+int mode_pack(lua_State *L, int mode) {
 	struct write_block wb;
-	wb_init(&wb, &temp, refarr);
+	wb_init(&wb, mode);
 	int n = lua_gettop(L);
 	for (int i=1;i<=n;i++) {
 		pack_one(L, &wb, i, 0);
 	}
-	assert(wb.head == &temp);
-	seri(L, &temp, wb.len);
-
-	wb_free(&wb);
+	lua_pushlightuserdata(L, wb.buffer);
+	lua_pushinteger(L, wb.len);
 
 	return 2;
 }

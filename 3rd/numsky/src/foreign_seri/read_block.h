@@ -5,12 +5,12 @@
 
 struct read_block {
 	char * buffer;
-	int len;
-	int ptr;
-	bool refarr;
+	int64_t len;
+	int64_t ptr;
+	int mode;
 };
 
-void rball_init(struct read_block * rb, char * buffer, int size, bool refarr);
+void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode);
 void *rb_read(struct read_block *rb, int sz);
 
-int lua_unpack(lua_State *L, bool refarr);
+int mode_unpack(lua_State *L, int mode);

@@ -3,23 +3,34 @@
 #include "foreign_seri/read_block.h"
 #include "foreign_seri/write_block.h"
 
+int luapack(lua_State *L) {
+	return mode_pack(L, MODE_LUA);
+}
+
+int luaunpack(lua_State *L) {
+	return mode_unpack(L, MODE_LUA);
+}
+
 int refpack(lua_State *L) {
-	return lua_pack(L, true);
+	return mode_pack(L, MODE_FOREIGN_REF);
 }
 
 int refunpack(lua_State *L) {
-	return lua_unpack(L, true);
+	return mode_unpack(L, MODE_FOREIGN_REF);
 }
 
 int remotepack(lua_State *L) {
-	return lua_pack(L, false);
+	return mode_pack(L, MODE_FOREIGN_REMOTE);
 }
 
 int remoteunpack(lua_State *L) {
-	return lua_unpack(L, false);
+	return mode_unpack(L, MODE_FOREIGN_REMOTE);
 }
 
 static const struct luaL_Reg l_methods[] = {
+    { "luapack" , luapack },
+    { "luaunpack", luaunpack },
+
     { "refpack" , refpack },
     { "refunpack", refunpack },
 

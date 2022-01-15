@@ -4,11 +4,11 @@
 
 #include "foreign_seri/read_block.h"
 
-void rball_init(struct read_block * rb, char * buffer, int size, bool refarr) {
+void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->buffer = buffer;
 	rb->len = size;
 	rb->ptr = 0;
-	rb->refarr = refarr;
+	rb->mode = mode;
 }
 
 void *rb_read(struct read_block *rb, int sz) {
@@ -179,7 +179,7 @@ unpack_ns_arr(struct read_block *rb, int nd) {
 	// 3. build
 	struct skynet_foreign *foreign_base;
 	char *dataptr;
-	if(rb->refarr) {
+	if(rb->mode == MODE_FOREIGN_REF) {
 		numsky_ndarray_autocount(arr);
 		npy_intp *strides = (npy_intp*)rb_read(rb, sizeof(npy_intp)*nd);
 		if(strides == NULL) {
@@ -210,7 +210,7 @@ unpack_ns_arr(struct read_block *rb, int nd) {
 			return NULL;
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
-	} else {
+	} else if (rb->mode == MODE_FOREIGN_REMOTE){
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base
 		size_t datasize = arr->count*arr->dtype->elsize;
@@ -223,6 +223,8 @@ unpack_ns_arr(struct read_block *rb, int nd) {
 		foreign_base = skynet_foreign_newbytes(datasize);
 		dataptr = foreign_base->data;
 		memcpy(dataptr, pdata, datasize);
+	} else {
+		return NULL;
 	}
 	numsky_ndarray_refdata(arr, foreign_base, dataptr);
 	return arr;
@@ -309,19 +311,19 @@ unpack_one(lua_State *L, struct read_block *rb) {
 	push_value(L, rb, type & 0x7, type>>3);
 }
 
-int lua_unpack(lua_State *L, bool refarr) {
-	if (lua_isnoneornil(L,1)) {
-		return 0;
-	}
+int mode_unpack(lua_State *L, int mode) {
 	void * buffer;
-	int len;
-	if (lua_type(L,1) == LUA_TSTRING) {
+	int64_t len;
+	int type1 = lua_type(L, 1);
+	if (type1 == LUA_TSTRING) {
 		size_t sz;
-		 buffer = (void *)lua_tolstring(L,1,&sz);
-		len = (int)sz;
-	} else {
+		buffer = (void *)lua_tolstring(L,1,&sz);
+		len = sz;
+	} else if(type1 == LUA_TLIGHTUSERDATA) {
 		buffer = lua_touserdata(L,1);
 		len = luaL_checkinteger(L,2);
+	} else {
+		return luaL_error(L, "deserialize must take a string or lightuserdata & integer");
 	}
 	if (len == 0) {
 		return 0;
@@ -332,10 +334,9 @@ int lua_unpack(lua_State *L, bool refarr) {
 
 	lua_settop(L,1);
 	struct read_block rb;
-	rball_init(&rb, (char*)buffer, len, refarr);
+	rb_init(&rb, (char*)buffer, len, mode);
 
-	int i;
-	for (i=0;;i++) {
+	for (int i=0;;i++) {
 		if (i%8==7) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
 		}

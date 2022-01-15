@@ -33,8 +33,6 @@
 #define BLOCK_SIZE 128
 #define MAX_DEPTH 32
 
-enum SeriMode {
-	MODE_LUA = 0,
-	MODE_FOREIGN = 1,
-	MODE_FOREIGN_REMOTE = 2,
-};
+#define MODE_LUA 0
+#define MODE_FOREIGN_REF 1
+#define MODE_FOREIGN_REMOTE 2
