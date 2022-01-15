@@ -198,7 +198,7 @@ wb_table(lua_State *L, struct write_block *wb, int index, int depth) {
 	}
 }
 
-inline static void wb_uint(struct write_block* wb, npy_intp v) {
+void wb_uint(struct write_block* wb, npy_intp v) {
 	static const int B = 128;
 	uint8_t data = v | B;
 	while (v >= B) {

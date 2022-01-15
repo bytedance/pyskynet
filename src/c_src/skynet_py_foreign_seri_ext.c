@@ -4,7 +4,9 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
 
-#include "lua-foreign_seri.c"
+#include "foreign_seri/seri.h"
+#include "foreign_seri/read_block.h"
+#include "foreign_seri/write_block.h"
 
 static bool PyArray_foreign_check_typechar(PyObject *py_obj){
     PyArrayObject *arr = (PyArrayObject*)(py_obj);
@@ -53,7 +55,7 @@ static PyObject *__foreign_check_base(struct skynet_foreign* high_obj, const cha
 */
 
 // array, skynet to python
-static PyObject *unpack_PyArray(struct foreign_read_block *rb, int cookie) {
+static PyObject *unpack_PyArray(struct read_block *rb, int cookie) {
 	struct numsky_ndarray *ns_arr = unpack_ns_arr(rb, cookie);
 	if(ns_arr == NULL) {
 		Py_INCREF(Py_None);
@@ -68,7 +70,7 @@ static PyObject *unpack_PyArray(struct foreign_read_block *rb, int cookie) {
 	return (PyObject*)arr;
 }
 
-static void wb_foreign_PyArray(struct foreign_write_block *wb, PyObject *py_obj, PyObject *py_arr_iter) {
+static void wb_foreign_PyArray(struct write_block *wb, PyObject *py_obj, PyObject *py_arr_iter) {
     PyArrayObject *arr = (PyArrayObject*)(py_obj);
 	int nd = PyArray_NDIM(arr);
 	if(nd >= MAX_COOKIE) {
@@ -76,22 +78,22 @@ static void wb_foreign_PyArray(struct foreign_write_block *wb, PyObject *py_obj,
 	}
 	// 1. nd & type
 	uint8_t n = COMBINE_TYPE(TYPE_FOREIGN_USERDATA, nd);
-	foreign_wb_write(wb, &n, 1);
+	wb_write(wb, &n, 1);
 	// 2. typechar
 	char typechar = PyArray_DESCR(arr)->type;
-	foreign_wb_write(wb, &typechar, 1);
+	wb_write(wb, &typechar, 1);
 	// 3. dimension
     for(int i=0;i<nd;i++) {
-		foreign_wb_uint(wb, PyArray_DIMS(arr)[i]);
+		wb_uint(wb, PyArray_DIMS(arr)[i]);
 	}
-	if(wb->mode == MODE_FOREIGN) {
+	if(wb->mode == MODE_FOREIGN_REF) {
 		// 4. strides
-		foreign_wb_write(wb, PyArray_STRIDES(arr), sizeof(npy_intp)*nd);
+		wb_write(wb, PyArray_STRIDES(arr), sizeof(npy_intp)*nd);
 		// 5. foreign_base & dataptr
 		Py_INCREF(py_obj);
 		struct skynet_foreign* foreign_base = skynet_foreign_newrefpy(py_obj, PyArray_DATA(arr), SF_FLAGS_WRITEABLE);
-		foreign_wb_write(wb, &foreign_base, sizeof(foreign_base));
-		foreign_wb_write(wb, &(foreign_base->data), sizeof(foreign_base->data));
+		wb_write(wb, &foreign_base, sizeof(foreign_base));
+		wb_write(wb, &(foreign_base->data), sizeof(foreign_base->data));
 	} else if(wb->mode == MODE_FOREIGN_REMOTE) {
 		//  value seri
 		PyArrayIterObject *arr_iter = (PyArrayIterObject*)(py_arr_iter);
@@ -99,56 +101,8 @@ static void wb_foreign_PyArray(struct foreign_write_block *wb, PyObject *py_obj,
 		int itemsize = PyArray_ITEMSIZE(arr);
 		while(PyArray_ITER_NOTDONE(arr_iter)) {
 			void *ptr=PyArray_ITER_DATA(arr_iter);
-			foreign_wb_write(wb, ptr, itemsize);
+			wb_write(wb, ptr, itemsize);
 			PyArray_ITER_NEXT(arr_iter);
 		}
 	}
 }
-
-/*
-// because memoryview may call bf_releasebuffer(mbuf->master->obj, view), which may break some state of source obj, so... just wrap it with a capsule.
-static void base_capsule_destructor(PyObject *capsule) {
-    PyObject *obj = (PyObject*)PyCapsule_GetPointer(capsule, PyCapsule_GetName(capsule));
-	Py_DECREF(obj);
-}
-
-// memoryview, skynet to python
-static PyObject *foreign_buffer_make_PyMemoryView(struct skynet_foreign_buffer* obj) {
-	PyObject *base = __foreign_check_base(SF_CAST(obj), skynet_foreign_buffer_type.type_name);
-	if(!PyCapsule_CheckExact(base)) {
-		base = PyCapsule_New(base, Py_TYPE(base)->tp_name, base_capsule_destructor);
-	}
-    PyMemoryViewObject *mem = (PyMemoryViewObject*)PyMemoryView_FromMemory(SF_DATA(obj), obj->size, PyBUF_WRITE);
-    mem->mbuf->master.obj=base;
-    mem->view.obj = base;
-    return (PyObject*)mem;
-}
-
-// memoryview, python to skynet
-static struct skynet_foreign_buffer *foreign_buffer_from_PyMemoryView(PyObject *py_obj) {
-    PyMemoryViewObject *mem = (PyMemoryViewObject*)(py_obj);
-    struct skynet_foreign_buffer *obj = foreign_malloc(sizeof(struct skynet_foreign_buffer));
-    skynet_foreign_init(
-		  SF_CAST(obj),
-		  SKYNET_FOREIGN_TYPE_FOREIGN_BUFFER,
-		  SF_FLAGS_WRITEABLE
-		  );
-    skynet_foreign_refdata(SF_CAST(obj), mem->view.buf, mem, SF_REF_PYTHON);
-    obj->size = mem->view.len;
-    Py_INCREF(py_obj);
-    return obj;
-}
-
-static void wb_foreign_remote_PyMemoryView(struct foreign_write_block *wb, PyObject *py_obj) {
-	uint8_t n = TYPE_FOREIGN_USERDATA;
-	foreign_wb_write(wb, &n, 1);
-    PyMemoryViewObject *mem = (PyMemoryViewObject*)(py_obj);
-	//  type seri
-    foreign_wb_write(wb, &(skynet_foreign_buffer_type.type_id), 1);
-
-	//  value seri
-	int32_t length = mem->view.len;
-    foreign_wb_write(wb, &length, 4);
-    foreign_wb_write(wb, mem->view.buf, length);
-}*/
-

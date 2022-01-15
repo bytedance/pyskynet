@@ -22,5 +22,6 @@ void wb_integer(struct write_block *wb, lua_Integer v);
 void wb_real(struct write_block *wb, double v);
 void wb_pointer(struct write_block *wb, void *v);
 void wb_string(struct write_block *wb, const char *str, int len);
+void wb_uint(struct write_block* wb, npy_intp v);
 
 int mode_pack(lua_State *L, int mode);

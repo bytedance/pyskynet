@@ -29,6 +29,7 @@ invalid_stream_line(lua_State *L, struct read_block *rb, int line) {
 }
 
 #define invalid_stream(L,rb) invalid_stream_line(L,rb,__LINE__)
+
 inline static bool rb_uint(struct read_block* rb, npy_intp *value) {
 	npy_intp result = 0;
 	for (uint32_t shift = 0; shift <= 63; shift += 7) {
@@ -160,8 +161,7 @@ unpack_table(lua_State *L, struct read_block *rb, int array_size) {
 	}
 }
 
-static struct numsky_ndarray*
-unpack_ns_arr(struct read_block *rb, int nd) {
+struct numsky_ndarray* unpack_ns_arr(struct read_block *rb, int nd) {
 	// 1. get dtype
 	char * p_typechar = (char *)rb_read(rb, 1);
 	if(p_typechar == NULL){
@@ -224,6 +224,7 @@ unpack_ns_arr(struct read_block *rb, int nd) {
 		dataptr = foreign_base->data;
 		memcpy(dataptr, pdata, datasize);
 	} else {
+		numsky_ndarray_destroy(arr);
 		return NULL;
 	}
 	numsky_ndarray_refdata(arr, foreign_base, dataptr);

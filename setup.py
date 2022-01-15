@@ -50,7 +50,8 @@ def create_cython_extensions():
 
     ext_seri = Extension('pyskynet.skynet_py_foreign_seri',
         include_dirs=INCLUDE_DIRS,
-        sources=['src/cy_src/skynet_py_foreign_seri.pyx'],
+        sources=['src/cy_src/skynet_py_foreign_seri.pyx'] +
+                list_path('3rd/numsky/src/foreign_seri/', '.c', ["lua-foreign_seri.c"]),
         depends=['src/cy_src/skynet_py.pxd'],
         define_macros=MACROS,
         libraries=LIBRARIES)
