@@ -118,7 +118,7 @@ def rawsend(dst, type_name_or_id, msg_ptr, msg_size):
 # skynet.lua
 def call(addr, type_name_or_id, *args):
     psproto = pyskynet_proto_dict[type_name_or_id]
-    return foreign_seri.unpack(*rawcall(addr, type_name_or_id, *psproto.pack(*args)))
+    return psproto.unpack(*rawcall(addr, type_name_or_id, *psproto.pack(*args)))
 
 
 # skynet.lua
