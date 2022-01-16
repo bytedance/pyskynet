@@ -132,10 +132,10 @@ void wb_string(struct write_block *wb, const char *str, int len) {
 	}
 }
 
-static void pack_one(lua_State *L, struct write_block *b, int index, int depth);
+static void lwb_pack_one(lua_State *L, struct write_block *b, int index, int depth);
 
 static int
-wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
+lwb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 	int array_size = lua_rawlen(L,index);
 	if (array_size >= MAX_COOKIE-1) {
 		uint8_t n = COMBINE_TYPE(TYPE_TABLE, MAX_COOKIE-1);
@@ -149,7 +149,7 @@ wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 	int i;
 	for (i=1;i<=array_size;i++) {
 		lua_rawgeti(L,index,i);
-		pack_one(L, wb, -1, depth);
+		lwb_pack_one(L, wb, -1, depth);
 		lua_pop(L,1);
 	}
 
@@ -157,7 +157,7 @@ wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 }
 
 static void
-wb_table_hash(lua_State *L, struct write_block * wb, int index, int depth, int array_size) {
+lwb_table_hash(lua_State *L, struct write_block * wb, int index, int depth, int array_size) {
 	lua_pushnil(L);
 	while (lua_next(L, index) != 0) {
 		if (lua_type(L,-2) == LUA_TNUMBER) {
@@ -169,15 +169,15 @@ wb_table_hash(lua_State *L, struct write_block * wb, int index, int depth, int a
 				}
 			}
 		}
-		pack_one(L,wb,-2,depth);
-		pack_one(L,wb,-1,depth);
+		lwb_pack_one(L,wb,-2,depth);
+		lwb_pack_one(L,wb,-1,depth);
 		lua_pop(L, 1);
 	}
 	wb_nil(wb);
 }
 
 static void
-wb_table_metapairs(lua_State *L, struct write_block *wb, int index, int depth) {
+lwb_table_metapairs(lua_State *L, struct write_block *wb, int index, int depth) {
 	uint8_t n = COMBINE_TYPE(TYPE_TABLE, 0);
 	wb_push(wb, &n, 1);
 	lua_pushvalue(L, index);
@@ -192,24 +192,24 @@ wb_table_metapairs(lua_State *L, struct write_block *wb, int index, int depth) {
 			lua_pop(L, 4);
 			break;
 		}
-		pack_one(L, wb, -2, depth);
-		pack_one(L, wb, -1, depth);
+		lwb_pack_one(L, wb, -2, depth);
+		lwb_pack_one(L, wb, -1, depth);
 		lua_pop(L, 1);
 	}
 	wb_nil(wb);
 }
 
 static void
-wb_table(lua_State *L, struct write_block *wb, int index, int depth) {
+lwb_table(lua_State *L, struct write_block *wb, int index, int depth) {
 	luaL_checkstack(L, LUA_MINSTACK, NULL);
 	if (index < 0) {
 		index = lua_gettop(L) + index + 1;
 	}
 	if (luaL_getmetafield(L, index, "__pairs") != LUA_TNIL) {
-		wb_table_metapairs(L, wb, index, depth);
+		lwb_table_metapairs(L, wb, index, depth);
 	} else {
-		int array_size = wb_table_array(L, wb, index, depth);
-		wb_table_hash(L, wb, index, depth, array_size);
+		int array_size = lwb_table_array(L, wb, index, depth);
+		lwb_table_hash(L, wb, index, depth, array_size);
 	}
 }
 
@@ -255,7 +255,7 @@ inline static void wb_ns_arr(struct write_block *wb, struct numsky_ndarray* arr_
 }
 
 static void
-pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
+lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	if (depth > MAX_DEPTH) {
 		wb_free(wb);
 		luaL_error(L, "serialize can't pack too depth table");
@@ -291,7 +291,7 @@ pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 		if (index < 0) {
 			index = lua_gettop(L) + index + 1;
 		}
-		wb_table(L, wb, index, depth+1);
+		lwb_table(L, wb, index, depth+1);
 		break;
 	}
 	case LUA_TUSERDATA: {
@@ -324,7 +324,7 @@ int mode_pack(lua_State *L, int mode) {
 	wb_init(&wb, mode);
 	int n = lua_gettop(L);
 	for (int i=1;i<=n;i++) {
-		pack_one(L, &wb, i, 0);
+		lwb_pack_one(L, &wb, i, 0);
 	}
 	lua_pushlightuserdata(L, wb.buffer);
 	lua_pushinteger(L, wb.len);

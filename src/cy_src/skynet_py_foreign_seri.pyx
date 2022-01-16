@@ -22,12 +22,17 @@ cdef extern from "skynet_py_foreign_seri_ext.c": #from "lua-foreign_seri.c":
         MODE_FOREIGN_REF
         MODE_FOREIGN_REMOTE
 
+
     # for read
+    uint8_t COMBINE_TYPE(uint8_t, uint8_t)
     cdef struct read_block:
         int mode
     void rb_init(read_block* rb, char* buffer, int64_t size, int mode)
     void* rb_read(read_block* rb, int64_t sz)
-    uint8_t COMBINE_TYPE(uint8_t, uint8_t)
+    bint rb_get_integer(read_block *rb, int cookie, lua_Integer *pout) except 0
+    bint rb_get_real(read_block *rb, double *pout) except 0
+    bint rb_get_pointer(read_block *rb, void ** pout) except 0
+    char* rb_get_string(read_block *rb, uint32_t ahead, size_t *psize) except NULL
 
     # for write
     cdef struct write_block:
@@ -72,76 +77,6 @@ cdef extern from "skynet_py_foreign_seri_ext.c": #from "lua-foreign_seri.c":
 # functions for unpack #
 ########################
 
-cdef double py_get_real(read_block* rb) except *:
-    cdef double n_double
-    cdef void * ptr
-    ptr = rb_read(rb, sizeof(n_double))
-    if(ptr==NULL):
-        raise Exception("invalid stream")
-    memcpy(&n_double, ptr, sizeof(n_double));
-    return n_double
-
-cdef lua_Integer py_get_integer(read_block* rb, int cookie) except *:
-    cdef uint8_t n_uint8
-    cdef uint16_t n_uint16
-    cdef int32_t n_int32
-    cdef int64_t n_int64
-    cdef void * ptr
-    if(cookie==TYPE_NUMBER_ZERO):
-        return 0
-    elif(cookie==TYPE_NUMBER_BYTE):
-        ptr = rb_read(rb, sizeof(n_uint8));
-        if (ptr == NULL):
-            raise Exception("invalid stream")
-        memcpy(&n_uint8, ptr, sizeof(n_uint8));
-        return n_uint8
-    elif(cookie==TYPE_NUMBER_WORD):
-        ptr = rb_read(rb, sizeof(n_uint16));
-        if(ptr == NULL):
-            raise Exception("invalid stream")
-        memcpy(&n_uint16, ptr, sizeof(n_uint16));
-        return n_uint16
-    elif(cookie==TYPE_NUMBER_DWORD):
-        ptr = rb_read(rb, sizeof(n_int32));
-        if(ptr == NULL):
-            raise Exception("invalid stream")
-        memcpy(&n_int32, ptr, sizeof(n_int32));
-        return n_int32
-    elif(cookie==TYPE_NUMBER_QWORD):
-        ptr = rb_read(rb, sizeof(n_int64));
-        if(ptr == NULL):
-            raise Exception("invalid stream")
-        memcpy(&n_int64, ptr, sizeof(n_int64));
-        return n_int64
-    else:
-        raise Exception("invalid stream")
-
-#cdef skynet_foreign* py_get_foreign(read_block *rb) except NULL:
-#    cdef skynet_foreign* userdata = NULL
-#    cdef void * buffer = NULL
-#    cdef void ** v
-#    cdef int32_t * psize
-#    if rb.mode == MODE_FOREIGN:
-#        v = <void **>rb_read(rb,sizeof(userdata));
-#        if v == NULL:
-#            raise Exception("invalid stream")
-#        memcpy(&userdata, v, sizeof(userdata));
-#    elif rb.mode == MODE_FOREIGN_REMOTE:
-#        userdata = skynet_foreign_deserialize(rb, <void *(*)(void*, int)>rb_read);
-#        if userdata == NULL:
-#            raise Exception("invalid stream")
-#    else:
-#        raise Exception("unexcept mode for TYPE_FOREIGN_USERDATA")
-#    return userdata
-
-cdef void* py_get_pointer(read_block *rb) except NULL:
-    cdef void * userdata
-    cdef void ** v = <void **>rb_read(rb,sizeof(userdata));
-    if v == NULL:
-        raise Exception("invalid stream")
-    memcpy(&userdata, v, sizeof(userdata));
-    return userdata
-
 cdef char * py_get_string(read_block *rb, int value_type, int cookie, size_t *out) except NULL:
     cdef char * p = NULL
     cdef uint16_t *plen2
@@ -162,38 +97,37 @@ cdef char * py_get_string(read_block *rb, int value_type, int cookie, size_t *ou
                 raise Exception("invalid stream")
             p = <char *>rb_read(rb, plen4[0])
             out[0] = plen4[0]
+        else:
+            raise Exception("invalid stream")
     return p
 
-cdef void py_push_value(l, read_block *rb, int value_type, int cookie, bint iskey) except *:
+cdef void py_push_value(l, read_block *rb, uint8_t ahead, bint iskey) except *:
+    cdef int value_type = ahead & 0x7
+    cdef int cookie = ahead >> 3
     cdef char * ptr = NULL
     cdef size_t length = 0
     cdef void * lightuserdata = NULL
     cdef skynet_foreign * foreign_obj = NULL
+    cdef lua_Integer intvalue;
+    cdef double doublevalue;
     if value_type == TYPE_NIL:
         l.append(None)
     elif value_type == TYPE_BOOLEAN:
         l.append(cookie>0)
     elif value_type == TYPE_NUMBER:
         if (cookie == TYPE_NUMBER_REAL):
-            l.append(py_get_real(rb))
+            rb_get_real(rb, &doublevalue)
+            l.append(doublevalue)
         else:
-            l.append(py_get_integer(rb, cookie))
-    elif value_type==TYPE_SHORT_STRING:
-        ptr = py_get_string(rb, value_type, cookie, &length)
-        #if iskey:
-            #l.append(PyUnicode_DecodeUTF8(ptr, length, NULL))
-        #else:
-        l.append(PyBytes_FromStringAndSize(ptr, length))
-    elif value_type==TYPE_LONG_STRING:
-        ptr = py_get_string(rb, value_type, cookie, &length)
-        #if iskey:
-            #l.append(PyUnicode_DecodeUTF8(ptr, length, NULL))
-        #else:
+            rb_get_integer(rb, cookie, &intvalue)
+            l.append(intvalue)
+    elif value_type==TYPE_SHORT_STRING or value_type == TYPE_LONG_STRING:
+        ptr = rb_get_string(rb, ahead, &length)
         l.append(PyBytes_FromStringAndSize(ptr, length))
     elif value_type==TYPE_TABLE:
         py_unpack_table(l, rb, cookie)
     elif value_type==TYPE_USERDATA:
-        lightuserdata = py_get_pointer(rb)
+        rb_get_pointer(rb, &lightuserdata)
         l.append(PyCapsule_New(lightuserdata, "cptr", NULL))
     elif value_type==TYPE_FOREIGN_USERDATA:
         arr = unpack_PyArray(rb, cookie)
@@ -204,14 +138,14 @@ cdef void py_push_value(l, read_block *rb, int value_type, int cookie, bint iske
         raise Exception("invalid stream for value type exception")
 
 cdef void py_unpack_one(l, read_block *rb, bint iskey) except *:
-    cdef uint8_t value_type
-    cdef uint8_t *value_ptr = <uint8_t*>rb_read(rb, sizeof(value_type));
+    cdef uint8_t ahead
+    cdef uint8_t *value_ptr = <uint8_t*>rb_read(rb, 1);
     if value_ptr == NULL:
         raise Exception("invalid stream")
-    value_type = value_ptr[0]
-    py_push_value(l, rb, value_type & 0x7, value_type>>3, iskey);
+    ahead = value_ptr[0]
+    py_push_value(l, rb, ahead, iskey);
 
-cdef void py_unpack_table(l, read_block *rb, int array_size) except *:
+cdef void py_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
     cdef uint8_t value_type
     cdef uint8_t *value_ptr
     cdef int cookie
@@ -223,7 +157,7 @@ cdef void py_unpack_table(l, read_block *rb, int array_size) except *:
         cookie = value_type>>3
         if (value_type & 7) != TYPE_NUMBER or cookie == TYPE_NUMBER_REAL:
             raise Exception("invalid stream")
-        array_size = py_get_integer(rb, cookie)
+        rb_get_integer(rb, cookie, &array_size)
     #l.append(t)
     next_l = []
     for i in range(1, array_size+1):
@@ -249,14 +183,14 @@ cdef void cunpack(l, char *msg, size_t size, int mode) except *:
     cdef read_block rb
     rb_init(&rb, msg, size, mode);
     cdef int i = 0
-    cdef uint8_t value_type = 0
+    cdef uint8_t ahead
     cdef uint8_t *value_ptr = NULL
     while True:
-        value_ptr = <uint8_t *>rb_read(&rb, sizeof(value_type))
+        value_ptr = <uint8_t *>rb_read(&rb, 1)
         if value_ptr == NULL:
             break
-        value_type = value_ptr[0]
-        py_push_value(l, &rb, value_type & 0x7, value_type>>3, 0);
+        ahead = value_ptr[0]
+        py_push_value(l, &rb, ahead, 0);
 
 # extern
 cdef py_foreign_unpack(int mode, capsule_or_bytes, py_sz):
