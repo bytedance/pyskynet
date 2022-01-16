@@ -136,7 +136,7 @@ char* rb_get_string(struct read_block *rb, uint8_t ahead, size_t *psize) {
 	}
 }
 
-static void lrb_unpack_one(lua_State *L, struct read_block *rb);
+static uint8_t* lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table);
 
 static void lrb_unpack_table(lua_State *L, struct read_block *rb, lua_Integer array_size) {
 	if (array_size == MAX_COOKIE-1) {
@@ -156,16 +156,16 @@ static void lrb_unpack_table(lua_State *L, struct read_block *rb, lua_Integer ar
 	luaL_checkstack(L,LUA_MINSTACK,NULL);
 	lua_createtable(L,array_size,0);
 	for (int i=1;i<=array_size;i++) {
-		lrb_unpack_one(L,rb);
+		lrb_unpack_one(L,rb,true);
 		lua_rawseti(L,-2,i);
 	}
 	for (;;) {
-		lrb_unpack_one(L,rb);
+		lrb_unpack_one(L,rb,true);
 		if (lua_isnil(L,-1)) {
 			lua_pop(L,1);
 			return;
 		}
-		lrb_unpack_one(L,rb);
+		lrb_unpack_one(L,rb,true);
 		lua_rawset(L,-3);
 	}
 }
@@ -245,8 +245,16 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	return arr;
 }
 
-static void
-push_value(lua_State *L, struct read_block *rb, uint8_t ahead) {
+static uint8_t*
+lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
+	uint8_t *aheadptr = (uint8_t*)rb_read(rb, 1);
+	if (aheadptr==NULL) {
+		if(in_table) {
+			invalid_stream(L, rb);
+		}
+		return NULL;
+	}
+	uint8_t ahead = *aheadptr;
 	int type = ahead & 0x7;
 	int cookie = ahead >> 3;
 	switch(type) {
@@ -316,19 +324,11 @@ push_value(lua_State *L, struct read_block *rb, uint8_t ahead) {
 		break;
 	}
 	}
+	return aheadptr;
 }
 
-static void
-lrb_unpack_one(lua_State *L, struct read_block *rb) {
-	uint8_t *t = (uint8_t*)rb_read(rb, 1);
-	if (t==NULL) {
-		invalid_stream(L, rb);
-	}
-	uint8_t ahead = *t;
-	push_value(L, rb, ahead);
-}
 
-int mode_unpack(lua_State *L, int mode) {
+int lmode_unpack(int mode, lua_State *L) {
 	void * buffer;
 	int64_t len;
 	int type1 = lua_type(L, 1);
@@ -357,11 +357,9 @@ int mode_unpack(lua_State *L, int mode) {
 		if (i%8==7) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
 		}
-		uint8_t *t = (uint8_t*)rb_read(&rb, 1);
-		if (t==NULL)
+		if(lrb_unpack_one(L, &rb, false) == NULL) {
 			break;
-		uint8_t ahead = *t;
-		push_value(L, &rb, ahead);
+		}
 	}
 
 	// Need not free buffer

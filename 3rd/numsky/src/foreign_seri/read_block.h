@@ -19,4 +19,4 @@ bool rb_get_pointer(struct read_block *rb, void ** pout);
 char* rb_get_string(struct read_block *rb, uint8_t ahead, size_t *psize);
 struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd);
 
-int mode_unpack(lua_State *L, int mode);
+int lmode_unpack(int mode, lua_State *L);

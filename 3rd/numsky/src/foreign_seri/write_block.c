@@ -319,7 +319,7 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	}
 }
 
-int mode_pack(lua_State *L, int mode) {
+int lmode_pack(int mode, lua_State *L) {
 	struct write_block wb;
 	wb_init(&wb, mode);
 	int n = lua_gettop(L);

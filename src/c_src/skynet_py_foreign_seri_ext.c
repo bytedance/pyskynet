@@ -70,7 +70,7 @@ static PyObject *pyrb_get_PyArray(struct read_block *rb, int cookie) {
 	return (PyObject*)arr;
 }
 
-static void wb_foreign_PyArray(struct write_block *wb, PyObject *py_obj, PyObject *py_arr_iter) {
+static void pywb_put_PyArray(struct write_block *wb, PyObject *py_obj, PyObject *py_arr_iter) {
     PyArrayObject *arr = (PyArrayObject*)(py_obj);
 	int nd = PyArray_NDIM(arr);
 	if(nd >= MAX_COOKIE) {

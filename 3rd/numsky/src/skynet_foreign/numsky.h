@@ -2,6 +2,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "skynet_foreign/skynet_foreign.h"
 
 #include "lua.h"
@@ -156,3 +160,6 @@ struct numsky_slice {
 	int step;		// step == 0 for integer index, step !=0 for interval index
 };
 
+#ifdef __cplusplus
+}
+#endif

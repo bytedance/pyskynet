@@ -101,7 +101,6 @@ def create_lua_extensions():
         sources=list_path('3rd/numsky/src/foreign_seri/', '.c'),
         include_dirs=INCLUDE_DIRS,
         define_macros=MACROS,
-        extra_compile_args=['-std=c++11'],
         libraries=LIBRARIES)
     lua_modify = Extension('pyskynet.lualib.pyskynet.modify',
         sources=['src/c_src/lua-modify.c'],

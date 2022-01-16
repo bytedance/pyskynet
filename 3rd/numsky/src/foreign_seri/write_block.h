@@ -26,4 +26,4 @@ void wb_put_pointer(struct write_block *wb, void *v);
 void wb_put_string(struct write_block *wb, const char *str, int len);
 void wb_uint(struct write_block* wb, npy_intp v);
 
-int mode_pack(lua_State *L, int mode);
+int lmode_pack(int mode, lua_State *L);

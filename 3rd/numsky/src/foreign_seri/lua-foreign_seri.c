@@ -4,27 +4,27 @@
 #include "foreign_seri/write_block.h"
 
 static int luapack(lua_State *L) {
-	return mode_pack(L, MODE_LUA);
+	return lmode_pack(MODE_LUA, L);
 }
 
 static int luaunpack(lua_State *L) {
-	return mode_unpack(L, MODE_LUA);
+	return lmode_unpack(MODE_LUA, L);
 }
 
 static int refpack(lua_State *L) {
-	return mode_pack(L, MODE_FOREIGN_REF);
+	return lmode_pack(MODE_FOREIGN_REF, L);
 }
 
 static int refunpack(lua_State *L) {
-	return mode_unpack(L, MODE_FOREIGN_REF);
+	return lmode_unpack(MODE_FOREIGN_REF, L);
 }
 
 static int remotepack(lua_State *L) {
-	return mode_pack(L, MODE_FOREIGN_REMOTE);
+	return lmode_pack(MODE_FOREIGN_REMOTE, L);
 }
 
 static int remoteunpack(lua_State *L) {
-	return mode_unpack(L, MODE_FOREIGN_REMOTE);
+	return lmode_unpack(MODE_FOREIGN_REMOTE, L);
 }
 
 static int ltostring(lua_State *L) {

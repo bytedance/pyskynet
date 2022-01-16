@@ -16,12 +16,11 @@ cnp.import_array()
 
 from skynet_py cimport *
 
-cdef extern from "skynet_py_foreign_seri_ext.c": #from "lua-foreign_seri.c":
+cdef extern from "skynet_py_foreign_seri_ext.c":
     cdef enum:
         MODE_LUA
         MODE_FOREIGN_REF
         MODE_FOREIGN_REMOTE
-
 
     # for read
     uint8_t COMBINE_TYPE(uint8_t, uint8_t)
@@ -70,46 +69,30 @@ cdef extern from "skynet_py_foreign_seri_ext.c": #from "lua-foreign_seri.c":
 
     # deal for PyArray
     bint PyArray_foreign_check_typechar(object py_obj)
-    void wb_foreign_PyArray(write_block *wb, object arr, object arr_iter)
+    void pywb_put_PyArray(write_block *wb, object arr, object arr_iter)
     object pyrb_get_PyArray(read_block *wb, int cookie)
 
 ########################
 # functions for unpack #
 ########################
 
-cdef char * py_get_string(read_block *rb, int value_type, int cookie, size_t *out) except NULL:
-    cdef char * p = NULL
-    cdef uint16_t *plen2
-    cdef uint32_t *plen4
-    if value_type==TYPE_SHORT_STRING:
-        p = <char *>rb_read(rb, cookie)
-        out[0] = cookie
-    elif value_type==TYPE_LONG_STRING:
-        if(cookie == 2):
-            plen2 = <uint16_t *>rb_read(rb, 2)
-            if (plen2 == NULL):
-                raise Exception("invalid stream")
-            p = <char *>rb_read(rb, plen2[0])
-            out[0] = plen2[0]
-        elif(cookie == 4):
-            plen4 = <uint32_t *>rb_read(rb, 4)
-            if(plen4 == NULL):
-                raise Exception("invalid stream")
-            p = <char *>rb_read(rb, plen4[0])
-            out[0] = plen4[0]
-        else:
-            raise Exception("invalid stream")
-    return p
-
-cdef void py_push_value(l, read_block *rb, uint8_t ahead, bint iskey) except *:
-    cdef int value_type = ahead & 0x7
-    cdef int cookie = ahead >> 3
-    cdef char * ptr = NULL
-    cdef size_t length = 0
+cdef uint8_t* pyrb_unpack_one(l, read_block *rb, bint in_table) except *:
+    cdef uint8_t *aheadptr = <uint8_t*>rb_read(rb, 1);
+    cdef uint8_t ahead
+    cdef int value_type
+    cdef int cookie
+    cdef char * strptr = NULL
+    cdef size_t strlength = 0
     cdef void * lightuserdata = NULL
-    cdef skynet_foreign * foreign_obj = NULL
     cdef lua_Integer intvalue;
     cdef double doublevalue;
+    if aheadptr == NULL:
+        if in_table:
+            raise Exception("invalid stream")
+        return NULL
+    ahead = aheadptr[0]
+    value_type = ahead & 0x7
+    cookie = ahead >> 3
     if value_type == TYPE_NIL:
         l.append(None)
     elif value_type == TYPE_BOOLEAN:
@@ -121,9 +104,9 @@ cdef void py_push_value(l, read_block *rb, uint8_t ahead, bint iskey) except *:
         else:
             rb_get_integer(rb, cookie, &intvalue)
             l.append(intvalue)
-    elif value_type==TYPE_SHORT_STRING or value_type == TYPE_LONG_STRING:
-        ptr = rb_get_string(rb, ahead, &length)
-        l.append(PyBytes_FromStringAndSize(ptr, length))
+    elif value_type == TYPE_SHORT_STRING or value_type == TYPE_LONG_STRING:
+        strptr = rb_get_string(rb, ahead, &strlength)
+        l.append(PyBytes_FromStringAndSize(strptr, strlength))
     elif value_type==TYPE_TABLE:
         pyrb_unpack_table(l, rb, cookie)
     elif value_type==TYPE_USERDATA:
@@ -136,14 +119,7 @@ cdef void py_push_value(l, read_block *rb, uint8_t ahead, bint iskey) except *:
         l.append(arr)
     else:
         raise Exception("invalid stream for value type exception")
-
-cdef void pyrb_unpack_one(l, read_block *rb, bint iskey) except *:
-    cdef uint8_t ahead
-    cdef uint8_t *value_ptr = <uint8_t*>rb_read(rb, 1);
-    if value_ptr == NULL:
-        raise Exception("invalid stream")
-    ahead = value_ptr[0]
-    py_push_value(l, rb, ahead, iskey);
+    return aheadptr
 
 cdef void pyrb_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
     cdef uint8_t value_type
@@ -161,14 +137,14 @@ cdef void pyrb_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
     #l.append(t)
     next_l = []
     for i in range(1, array_size+1):
-        pyrb_unpack_one(next_l, rb, 0)
+        pyrb_unpack_one(next_l, rb, 1)
     next_t = {}
     while True:
         pyrb_unpack_one(next_l, rb, 1)
         if next_l[-1] is None:
             next_l.pop()
             break
-        pyrb_unpack_one(next_l, rb, 0)
+        pyrb_unpack_one(next_l, rb, 1)
         next_t[next_l[-2]] = next_l[-1]
         next_l.pop()
         next_l.pop()
@@ -179,46 +155,34 @@ cdef void pyrb_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
             next_t[i + 1] = v
         l.append(next_t)
 
-cdef void cunpack(l, char *msg, size_t size, int mode) except *:
-    cdef read_block rb
-    rb_init(&rb, msg, size, mode);
-    cdef int i = 0
-    cdef uint8_t ahead
-    cdef uint8_t *value_ptr = NULL
-    while True:
-        value_ptr = <uint8_t *>rb_read(&rb, 1)
-        if value_ptr == NULL:
-            break
-        ahead = value_ptr[0]
-        py_push_value(l, &rb, ahead, 0);
-
 # extern
-cdef py_foreign_unpack(int mode, capsule_or_bytes, py_sz):
+cdef pymode_unpack(int mode, capsule_or_bytes, py_sz):
     cdef const char *name
     cdef char *ptr
     cdef size_t sz
-    l = []
+    cdef read_block rb
     if PyCapsule_CheckExact(capsule_or_bytes):
         name = PyCapsule_GetName(capsule_or_bytes)
         ptr = <char *>PyCapsule_GetPointer(capsule_or_bytes, name)
         sz = py_sz
-        if strcmp(name, "cptr") == 0 or strcmp(name, "pyptr") == 0:
-            cunpack(l, ptr, sz, mode)
-            return tuple(l)
-        else:
+        if strcmp(name, "cptr") != 0 and strcmp(name, "pyptr") != 0:
             raise Exception("capsule unpack failed for name = %s " % PyBytes_FromString(name))
     elif PyBytes_CheckExact(capsule_or_bytes):
         ptr = <char *>PyBytes_AS_STRING(capsule_or_bytes)
         sz = PyBytes_GET_SIZE(capsule_or_bytes)
-        cunpack(l, ptr, sz, mode)
-        return tuple(l)
     else:
         raise Exception("Unexcept type %s " % str(type(capsule_or_bytes)))
+    rb_init(&rb, ptr, sz, mode);
+    l = []
+    while True:
+        if pyrb_unpack_one(l, &rb, 0) == NULL:
+            break
+    return tuple(l)
 
 ######################
 # functions for pack #
 ######################
-cdef void py_pack_list(write_block* wb, list_obj, int depth) except *:
+cdef void pywb_list(write_block* wb, list_obj, int depth) except *:
     cdef int array_size = len(list_obj)
     cdef uint8_t n
     if array_size >= MAX_COOKIE - 1:
@@ -229,18 +193,18 @@ cdef void py_pack_list(write_block* wb, list_obj, int depth) except *:
         n = COMBINE_TYPE(TYPE_TABLE, array_size);
         wb_write(wb, &n, 1);
     for v in list_obj:
-        py_pack_one(wb,v,depth)
+        pywb_pack_one(wb,v,depth)
     wb_nil(wb)
 
-cdef void py_pack_dict(write_block* wb, dict_obj, int depth) except *:
+cdef void pywb_dict(write_block* wb, dict_obj, int depth) except *:
     cdef uint8_t n = COMBINE_TYPE(TYPE_TABLE, 0);
     wb_write(wb, &n, 1);
     for k, v in dict_obj.items():
-        py_pack_one(wb,k,depth)
-        py_pack_one(wb,v,depth)
+        pywb_pack_one(wb,k,depth)
+        pywb_pack_one(wb,v,depth)
     wb_nil(wb)
 
-cdef void py_pack_one(write_block* wb, py_arg, int depth) except *:
+cdef void pywb_pack_one(write_block* wb, py_arg, int depth) except *:
     cdef int64_t bytes_sz = 0
     cdef char *bytes_ptr = NULL
     cdef const char *name = NULL
@@ -261,17 +225,17 @@ cdef void py_pack_one(write_block* wb, py_arg, int depth) except *:
             wb_free(wb)
             raise Exception("unexception typechar %s"%py_arg.dtype.char)
         if wb.mode == MODE_FOREIGN_REF:
-            wb_foreign_PyArray(wb, py_arg, None)
+            pywb_put_PyArray(wb, py_arg, None)
         elif wb.mode == MODE_FOREIGN_REMOTE:
             arr_iter = py_arg.flat
-            wb_foreign_PyArray(wb, py_arg, arr_iter)
+            pywb_put_PyArray(wb, py_arg, arr_iter)
         else:
             wb_free(wb)
             raise Exception("seri wb foreign unexception mode")
     elif isinstance(py_arg, dict):
-        py_pack_dict(wb, py_arg, depth+1)
+        pywb_dict(wb, py_arg, depth+1)
     elif isinstance(py_arg, list):
-        py_pack_list(wb, py_arg, depth+1)
+        pywb_list(wb, py_arg, depth+1)
     else:
         py_arg_type = type(py_arg)
         if py_arg_type == int or np.issubdtype(py_arg_type, np.integer):
@@ -297,11 +261,11 @@ cdef void py_pack_one(write_block* wb, py_arg, int depth) except *:
             wb_free(wb)
             raise Exception("Unsupport type %s to serialize"%str(py_arg_type))
 
-cdef py_foreign_pack(int mode, argtuple):
+cdef pymode_pack(int mode, argtuple):
     cdef write_block wb
     wb_init(&wb, mode)
     for one in argtuple:
-        py_pack_one(&wb, one, 0)
+        pywb_pack_one(&wb, one, 0)
     return PyCapsule_New(wb.buffer, "cptr", NULL), wb.len
 
 #########################
@@ -313,22 +277,22 @@ def tobytes(capsule, size_t size):
     return ptr[:size]
 
 def luapack(*args):
-    return py_foreign_pack(MODE_LUA, args)
+    return pymode_pack(MODE_LUA, args)
 
 def luaunpack(capsule, size=None):
-    return py_foreign_unpack(MODE_LUA, capsule, size)
+    return pymode_unpack(MODE_LUA, capsule, size)
 
 def pack(*args):
-    return py_foreign_pack(MODE_FOREIGN_REF, args)
+    return pymode_pack(MODE_FOREIGN_REF, args)
 
 def unpack(capsule, size=None):
-    return py_foreign_unpack(MODE_FOREIGN_REF, capsule, size)
+    return pymode_unpack(MODE_FOREIGN_REF, capsule, size)
 
 def remotepack(*args):
-    return py_foreign_pack(MODE_FOREIGN_REMOTE, args)
+    return pymode_pack(MODE_FOREIGN_REMOTE, args)
 
 def remoteunpack(capsule, size=None):
-    return py_foreign_unpack(MODE_FOREIGN_REMOTE, capsule, size)
+    return pymode_unpack(MODE_FOREIGN_REMOTE, capsule, size)
 
 def trash(capsule, size_t sz):
     cdef void *ptr = PyCapsule_GetPointer(capsule, "cptr")
