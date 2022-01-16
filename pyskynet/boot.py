@@ -34,7 +34,7 @@ def __first_msg_callback():
     # assert first message ( c.send(".python", 0, 0, "") )
     assert type_id == 0, "first message type must be 0 but get %s" % type_id
     assert session == 0, "first message session must be 0 but get %s" % session
-    boot_service, = pyskynet.skynet_py_foreign_seri.unpack(ptr, length)
+    boot_service, = pyskynet.skynet_py_foreign_seri.luaunpack(ptr, length)
     __watcher.callback = lambda: gevent.spawn(pyskynet_proto.async_handle)
     gevent.spawn(pyskynet_proto.async_handle)
     __boot_event.set()

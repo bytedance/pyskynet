@@ -9,9 +9,12 @@ void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->len = size;
 	rb->ptr = 0;
 	rb->mode = mode;
+	if(mode != MODE_LUA) {
+		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
+	}
 }
 
-void *rb_read(struct read_block *rb, int sz) {
+void *rb_read(struct read_block *rb, int64_t sz) {
 	if (rb->len < sz) {
 		return NULL;
 	}
@@ -191,6 +194,10 @@ struct numsky_ndarray* unpack_ns_arr(struct read_block *rb, int nd) {
 			arr->strides[i] = strides[i];
 		}
 		// 5. foreign_base, dataptr
+		if(rb->nextbase != rb->ptr) {
+			numsky_ndarray_destroy(arr);
+			return NULL;
+		}
 		// get foreign_base
 		void **v = (void **)rb_read(rb,sizeof(foreign_base));
 		if (v == NULL) {
@@ -210,6 +217,7 @@ struct numsky_ndarray* unpack_ns_arr(struct read_block *rb, int nd) {
 			return NULL;
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
+		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
 	} else if (rb->mode == MODE_FOREIGN_REMOTE){
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base

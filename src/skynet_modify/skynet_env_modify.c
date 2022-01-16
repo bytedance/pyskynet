@@ -99,6 +99,7 @@ const char *skynet_getenv(const char *key) {
 	if(buffer==NULL || sz <= 0) {
 		return NULL;
 	} else {
+		buffer = buffer + sizeof(intptr_t); // add offset for nextbase
 		uint8_t type = ((uint8_t*)buffer)[0];
 		int cookie = type>>3;
 		type = type & 0x7;
@@ -126,6 +127,8 @@ void skynet_setenv(const char *key, const char* value_str) {
 	size_t len = strlen(value_str);
 	char *buffer = skynet_malloc(len + 10);
 	char *ptr = buffer;
+	intptr_t empty = 0;
+	ptr = buffer_write(ptr, &empty, sizeof(empty));
 	if (len < MAX_COOKIE) {
 		uint8_t n = COMBINE_TYPE(TYPE_SHORT_STRING, len);
 		ptr = buffer_write(ptr, &n, 1);

@@ -25,10 +25,16 @@ void wb_write(struct write_block *wb, const void *buf, int64_t sz) {
 }
 
 void wb_init(struct write_block *wb, int mode) {
+	const int BLOCK_SIZE = 128;
 	wb->buffer = skynet_malloc(BLOCK_SIZE);
+	wb->nextbase = 0;
 	wb->capacity = BLOCK_SIZE;
 	wb->len = 0;
 	wb->mode = mode;
+	if(mode != MODE_LUA) {
+		intptr_t empty = 0;
+		wb_push(wb, &empty, sizeof(empty));
+	}
 }
 
 void wb_free(struct write_block *wb) {
@@ -36,6 +42,15 @@ void wb_free(struct write_block *wb) {
 		skynet_free(wb->buffer);
 		wb->buffer = NULL;
 	}
+}
+
+void wb_ref_base(struct write_block *wb, struct skynet_foreign* foreign_base, char *dataptr) {
+	*((intptr_t*)(wb->buffer + wb->nextbase)) = wb->len;
+	wb_push(wb, &(foreign_base), sizeof(foreign_base));
+	wb_push(wb, &(dataptr), sizeof(dataptr));
+	wb->nextbase = wb->len;
+	intptr_t empty = 0;
+	wb_push(wb, &empty, sizeof(empty));
 }
 
 void wb_nil(struct write_block *wb) {
@@ -226,9 +241,8 @@ inline static void wb_ns_arr(struct write_block *wb, struct numsky_ndarray* arr_
 		wb_push(wb, arr_obj->strides, sizeof(npy_intp)*arr_obj->nd);
 		// 5. data
 		skynet_foreign_incref(arr_obj->foreign_base);
-		wb_push(wb, &(arr_obj->foreign_base), sizeof(arr_obj->foreign_base));
-		wb_push(wb, &(arr_obj->dataptr), sizeof(arr_obj->dataptr));
-	} else if (wb->mode == MODE_FOREIGN_REMOTE){
+		wb_ref_base(wb, arr_obj->foreign_base, arr_obj->dataptr);
+	} else if (wb->mode == MODE_FOREIGN_REMOTE) {
 		// 4. data
 		struct numsky_nditer * iter = numsky_nditer_create(arr_obj);
 		for(int i=0;i<iter->ao->count;numsky_nditer_next(iter), i++) {

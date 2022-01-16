@@ -91,9 +91,9 @@ static void wb_foreign_PyArray(struct write_block *wb, PyObject *py_obj, PyObjec
 		wb_write(wb, PyArray_STRIDES(arr), sizeof(npy_intp)*nd);
 		// 5. foreign_base & dataptr
 		Py_INCREF(py_obj);
+		// TODO set readable when PyArray is readonly
 		struct skynet_foreign* foreign_base = skynet_foreign_newrefpy(py_obj, PyArray_DATA(arr), SF_FLAGS_WRITEABLE);
-		wb_write(wb, &foreign_base, sizeof(foreign_base));
-		wb_write(wb, &(foreign_base->data), sizeof(foreign_base->data));
+		wb_ref_base(wb, foreign_base, foreign_base->data);
 	} else if(wb->mode == MODE_FOREIGN_REMOTE) {
 		//  value seri
 		PyArrayIterObject *arr_iter = (PyArrayIterObject*)(py_arr_iter);

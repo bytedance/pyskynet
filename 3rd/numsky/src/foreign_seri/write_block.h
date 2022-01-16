@@ -8,6 +8,7 @@
 
 struct write_block {
 	char *buffer;
+	intptr_t nextbase;
 	int64_t capacity;
 	int64_t len;
 	int mode;
@@ -15,6 +16,7 @@ struct write_block {
 
 void wb_init(struct write_block *wb, int mode);
 void wb_free(struct write_block *wb);
+void wb_ref_base(struct write_block *wb, struct skynet_foreign* foreign_base, char *dataptr);
 void wb_write(struct write_block *b, const void *buf, int64_t sz);
 void wb_nil(struct write_block *wb);
 void wb_boolean(struct write_block *wb, int boolean);
