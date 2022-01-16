@@ -111,7 +111,7 @@ bool rb_get_pointer(struct read_block *rb, void ** pout) {
 	return true;
 }
 
-char* rb_get_string(struct read_block *rb, uint32_t ahead, size_t *psize) {
+char* rb_get_string(struct read_block *rb, uint8_t ahead, size_t *psize) {
 	int type = ahead & 0x7;
 	int cookie = ahead >> 3;
 	if(type == TYPE_SHORT_STRING){
@@ -170,7 +170,7 @@ static void lrb_unpack_table(lua_State *L, struct read_block *rb, lua_Integer ar
 	}
 }
 
-struct numsky_ndarray* unpack_ns_arr(struct read_block *rb, int nd) {
+struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	// 1. get dtype
 	char * p_typechar = (char *)rb_read(rb, 1);
 	if(p_typechar == NULL){
@@ -298,7 +298,7 @@ push_value(lua_State *L, struct read_block *rb, uint8_t ahead) {
 		break;
 	}
 	case TYPE_FOREIGN_USERDATA: {
-		struct numsky_ndarray *arr = unpack_ns_arr(rb, cookie);
+		struct numsky_ndarray *arr = rb_get_nsarr(rb, cookie);
 		if(arr==NULL) {
 			invalid_stream(L, rb);
 		} else {

@@ -63,7 +63,7 @@ void wb_boolean(struct write_block *wb, int boolean) {
 	wb_push(wb, &n, 1);
 }
 
-void wb_integer(struct write_block *wb, lua_Integer v) {
+void wb_put_integer(struct write_block *wb, lua_Integer v) {
 	int type = TYPE_NUMBER;
 	if (v == 0) {
 		uint8_t n = COMBINE_TYPE(type , TYPE_NUMBER_ZERO);
@@ -96,19 +96,19 @@ void wb_integer(struct write_block *wb, lua_Integer v) {
 	}
 }
 
-void wb_real(struct write_block *wb, double v) {
+void wb_put_real(struct write_block *wb, double v) {
 	uint8_t n = COMBINE_TYPE(TYPE_NUMBER , TYPE_NUMBER_REAL);
 	wb_push(wb, &n, 1);
 	wb_push(wb, &v, sizeof(v));
 }
 
-void wb_pointer(struct write_block *wb, void *v) {
+void wb_put_pointer(struct write_block *wb, void *v) {
 	uint8_t n = TYPE_USERDATA;
 	wb_push(wb, &n, 1);
 	wb_push(wb, &v, sizeof(v));
 }
 
-void wb_string(struct write_block *wb, const char *str, int len) {
+void wb_put_string(struct write_block *wb, const char *str, int len) {
 	if (len < MAX_COOKIE) {
 		uint8_t n = COMBINE_TYPE(TYPE_SHORT_STRING, len);
 		wb_push(wb, &n, 1);
@@ -140,7 +140,7 @@ lwb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 	if (array_size >= MAX_COOKIE-1) {
 		uint8_t n = COMBINE_TYPE(TYPE_TABLE, MAX_COOKIE-1);
 		wb_push(wb, &n, 1);
-		wb_integer(wb, array_size);
+		wb_put_integer(wb, array_size);
 	} else {
 		uint8_t n = COMBINE_TYPE(TYPE_TABLE, array_size);
 		wb_push(wb, &n, 1);
@@ -268,10 +268,10 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	case LUA_TNUMBER: {
 		if (lua_isinteger(L, index)) {
 			lua_Integer x = lua_tointeger(L,index);
-			wb_integer(wb, x);
+			wb_put_integer(wb, x);
 		} else {
 			lua_Number n = lua_tonumber(L,index);
-			wb_real(wb,n);
+			wb_put_real(wb,n);
 		}
 		break;
 	}
@@ -281,11 +281,11 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	case LUA_TSTRING: {
 		size_t sz = 0;
 		const char *str = lua_tolstring(L,index,&sz);
-		wb_string(wb, str, (int)sz);
+		wb_put_string(wb, str, (int)sz);
 		break;
 	}
 	case LUA_TLIGHTUSERDATA:
-		wb_pointer(wb, lua_touserdata(L,index));
+		wb_put_pointer(wb, lua_touserdata(L,index));
 		break;
 	case LUA_TTABLE: {
 		if (index < 0) {
