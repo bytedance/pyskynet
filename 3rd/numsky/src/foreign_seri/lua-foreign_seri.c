@@ -8,23 +8,23 @@ static int luapack(lua_State *L) {
 }
 
 static int luaunpack(lua_State *L) {
-	return lmode_unpack(MODE_LUA, L);
+	return lmode_unpack(false, L);
 }
 
 static int refpack(lua_State *L) {
-	return lmode_pack(MODE_FOREIGN_REF, L);
+	return lmode_pack(WB_MODE_FOREIGN_REF, L);
 }
 
 static int refunpack(lua_State *L) {
-	return lmode_unpack(MODE_FOREIGN_REF, L);
+	return lmode_unpack(true, L);
 }
 
 static int remotepack(lua_State *L) {
-	return lmode_pack(MODE_FOREIGN_REMOTE, L);
+	return lmode_pack(WB_MODE_FOREIGN_REMOTE, L);
 }
 
 static int remoteunpack(lua_State *L) {
-	return lmode_unpack(MODE_FOREIGN_REMOTE, L);
+	return lmode_unpack(true, L);
 }
 
 static int ltostring(lua_State *L) {

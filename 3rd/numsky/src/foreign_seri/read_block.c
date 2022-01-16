@@ -4,12 +4,12 @@
 
 #include "foreign_seri/read_block.h"
 
-void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
+void rb_init(struct read_block * rb, char * buffer, int64_t size, bool isforeign) {
 	rb->buffer = buffer;
 	rb->len = size;
 	rb->ptr = 0;
-	rb->mode = mode;
-	if(mode != MODE_LUA) {
+	rb->isforeign = isforeign;
+	if(isforeign) {
 		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
 	}
 }
@@ -172,12 +172,14 @@ static void lrb_unpack_table(lua_State *L, struct read_block *rb, lua_Integer ar
 
 struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	// 1. get dtype
-	char * p_typechar = (char *)rb_read(rb, 1);
-	if(p_typechar == NULL){
+	char * pchar = (char *)rb_read(rb, 1);
+	if(pchar == NULL) {
 		return NULL;
 	}
+	char typechar = pchar[0] & 0x7F;
+	bool isref = pchar[0] >> 7;
 	// 2. init from dimensions
-	struct numsky_ndarray *arr = numsky_ndarray_precreate(nd, p_typechar[0]);
+	struct numsky_ndarray *arr = numsky_ndarray_precreate(nd, typechar);
 	for(int i=0;i<nd;i++){
 		bool ok = rb_uint(rb, &arr->dimensions[i]);
 		if(!ok) {
@@ -188,7 +190,7 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	// 3. build
 	struct skynet_foreign *foreign_base;
 	char *dataptr;
-	if(rb->mode == MODE_FOREIGN_REF) {
+	if(isref) {
 		numsky_ndarray_autocount(arr);
 		npy_intp *strides = (npy_intp*)rb_read(rb, sizeof(npy_intp)*nd);
 		if(strides == NULL) {
@@ -224,7 +226,7 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
 		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
-	} else if (rb->mode == MODE_FOREIGN_REMOTE){
+	} else {
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base
 		size_t datasize = arr->count*arr->dtype->elsize;
@@ -237,9 +239,6 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 		foreign_base = skynet_foreign_newbytes(datasize);
 		dataptr = foreign_base->data;
 		memcpy(dataptr, pdata, datasize);
-	} else {
-		numsky_ndarray_destroy(arr);
-		return NULL;
 	}
 	numsky_ndarray_refdata(arr, foreign_base, dataptr);
 	return arr;
@@ -328,7 +327,7 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 }
 
 
-int lmode_unpack(int mode, lua_State *L) {
+int lmode_unpack(bool isforeign, lua_State *L) {
 	void * buffer;
 	int64_t len;
 	int type1 = lua_type(L, 1);
@@ -351,7 +350,7 @@ int lmode_unpack(int mode, lua_State *L) {
 
 	lua_settop(L,1);
 	struct read_block rb;
-	rb_init(&rb, (char*)buffer, len, mode);
+	rb_init(&rb, (char*)buffer, len, isforeign);
 
 	for (int i=0;;i++) {
 		if (i%8==7) {
