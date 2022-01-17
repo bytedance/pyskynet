@@ -21,6 +21,7 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
         MODE_LUA
         WB_MODE_FOREIGN_REF
         WB_MODE_FOREIGN_REMOTE
+    ctypedef int intptr_t
 
     # for read
     uint8_t COMBINE_TYPE(uint8_t, uint8_t)
@@ -32,10 +33,12 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     bint rb_get_real(read_block *rb, double *pout) except 0
     bint rb_get_pointer(read_block *rb, void ** pout) except 0
     char* rb_get_string(read_block *rb, uint8_t ahead, size_t *psize) except NULL
+    char *mode_unhook(bint isforeign, char* buf)
 
     # for write
     cdef struct write_block:
         char *buffer
+        intptr_t nextbase
         int64_t len
         int mode
     void wb_init(write_block* wb, int mode)
@@ -47,6 +50,8 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     void wb_put_string(write_block *wb, const char *ptr, int sz)
     void wb_put_pointer(write_block *wb, void *v)
     void wb_write(write_block *wb, const void *buf, int64_t sz)
+    char** mode_hook(int mode, char *buf, intptr_t nextbase)
+
     cdef enum:
         TYPE_NIL
         TYPE_BOOLEAN
@@ -159,6 +164,7 @@ cdef void pyrb_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
 cdef pymode_unpack(bint isforeign, capsule_or_bytes, py_sz):
     cdef const char *name
     cdef char *ptr
+    cdef char *realbuffer
     cdef size_t sz
     cdef read_block rb
     if PyCapsule_CheckExact(capsule_or_bytes):
@@ -172,11 +178,14 @@ cdef pymode_unpack(bint isforeign, capsule_or_bytes, py_sz):
         sz = PyBytes_GET_SIZE(capsule_or_bytes)
     else:
         raise Exception("Unexcept type %s " % str(type(capsule_or_bytes)))
-    rb_init(&rb, ptr, sz, isforeign);
+    realbuffer = mode_unhook(isforeign, ptr)
+    rb_init(&rb, realbuffer, sz, isforeign);
     l = []
     while True:
         if pyrb_unpack_one(l, &rb, 0) == NULL:
             break
+    if realbuffer != ptr:
+        skynet_free(realbuffer)
     return tuple(l)
 
 ######################
@@ -263,10 +272,15 @@ cdef void pywb_pack_one(write_block* wb, py_arg, int depth) except *:
 
 cdef pymode_pack(int mode, argtuple):
     cdef write_block wb
+    cdef char ** hookptr
     wb_init(&wb, mode)
     for one in argtuple:
         pywb_pack_one(&wb, one, 0)
-    return PyCapsule_New(wb.buffer, "cptr", NULL), wb.len
+    hookptr = mode_hook(mode, wb.buffer, wb.nextbase)
+    if hookptr == NULL:
+        return PyCapsule_New(wb.buffer, "cptr", NULL), wb.len, None
+    else:
+        return PyCapsule_New(hookptr, "cptr", NULL), wb.len, PyCapsule_New(wb.buffer, "cptr", NULL)
 
 #########################
 # outside pack & unpack #

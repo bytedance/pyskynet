@@ -35,10 +35,3 @@
 #define MODE_LUA 0
 #define WB_MODE_FOREIGN_REF 1
 #define WB_MODE_FOREIGN_REMOTE 2
-
-/* sometimes we need free msg ptr by ourself,
- * then return free_hooker for hook free in skynet message dispatch*/
-struct free_hooker {
-	void *realbuffer;
-	bool isref;
-};

@@ -326,17 +326,29 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 	return aheadptr;
 }
 
+char *mode_unhook(bool isforeign, char* buffer) {
+	if(isforeign) {
+		char ** hookptr = (char**)buffer;
+		if(*hookptr==NULL) {
+			return buffer;
+		} else {
+			return *hookptr;
+		}
+	} else {
+		return buffer;
+	}
+}
 
 int lmode_unpack(bool isforeign, lua_State *L) {
-	void * buffer;
+	char * buffer;
 	int64_t len;
 	int type1 = lua_type(L, 1);
 	if (type1 == LUA_TSTRING) {
 		size_t sz;
-		buffer = (void *)lua_tolstring(L,1,&sz);
+		buffer = lua_tolstring(L,1,&sz);
 		len = sz;
 	} else if(type1 == LUA_TLIGHTUSERDATA) {
-		buffer = lua_touserdata(L,1);
+		buffer = (char*)lua_touserdata(L,1);
 		len = luaL_checkinteger(L,2);
 	} else {
 		return luaL_error(L, "deserialize must take a string or lightuserdata & integer");
@@ -349,9 +361,9 @@ int lmode_unpack(bool isforeign, lua_State *L) {
 	}
 
 	lua_settop(L,1);
+	char *realbuffer = mode_unhook(isforeign, buffer);
 	struct read_block rb;
-	rb_init(&rb, (char*)buffer, len, isforeign);
-
+	rb_init(&rb, realbuffer, len, isforeign);
 	for (int i=0;;i++) {
 		if (i%8==7) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
@@ -361,7 +373,11 @@ int lmode_unpack(bool isforeign, lua_State *L) {
 		}
 	}
 
-	// Need not free buffer
+	if(realbuffer!=buffer) {
+		// Need free buffer if buffer is hookptr
+		skynet_free(realbuffer);
+	}
+
 
 	return lua_gettop(L) - 1;
 }
