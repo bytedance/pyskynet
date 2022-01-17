@@ -92,7 +92,7 @@ def create_skynet_extensions():
     return ext_cservices + [ext_skynet, ext_lpeg, ext_md5, ext_bson]
 
 def create_lua_extensions():
-    lua_service_pyholder = Extension('pyskynet.service.pyholder',
+    lua_service_pyholder = Extension('skynet.cservice.pyholder',
         sources=['src/c_src/service_pyholder.c'],
         include_dirs=INCLUDE_DIRS,
         define_macros=MACROS,

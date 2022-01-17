@@ -55,10 +55,10 @@ SKYNET_ROOT = os.path.join(os.path.abspath(
 PYSKYNET_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 boot_config = {
-    "thread": 1,
+    "thread": 2,
 
     # skynet service path
-    "cservice": [SKYNET_ROOT+"/cservice/?.so", PYSKYNET_ROOT+"/service/?.so"],
+    "cservice": [SKYNET_ROOT+"/cservice/?.so"],
     "luaservice": [SKYNET_ROOT+"/service/?.lua", PYSKYNET_ROOT+"/service/?.lua", "./?.lua"],
 
     # lua require path
@@ -99,7 +99,7 @@ def start(thread=2, path=[], cpath=[]):
             boot_config[key].append(f)
     assert type(cpath) == list, "start cpath must be list"
     for f in cpath:
-        for key in ["lua_cpath", "cservice"]:
+        for key in ["lua_cpath"]:
             boot_config[key].append(f)
     boot_config["thread"] = thread
     import pyskynet
