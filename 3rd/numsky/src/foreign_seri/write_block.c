@@ -231,22 +231,18 @@ inline static void wb_ns_arr(struct write_block *wb, struct numsky_ndarray* arr_
 	wb_push(wb, &n, 1);
 	struct numsky_dtype *dtype = arr_obj->dtype;
 	// 2. typechar
-	char ref_typechar = dtype->typechar;
-	if (wb->mode == WB_MODE_FOREIGN_REF) {
-		ref_typechar |= 0x80;
-	}
-	wb_push(wb, &(ref_typechar), 1);
+	wb_push(wb, &(dtype->typechar), 1);
 	// 3. dimension
 	for(int i=0;i<arr_obj->nd;i++) {
 		wb_uint(wb, arr_obj->dimensions[i]);
 	}
-	if (wb->mode == WB_MODE_FOREIGN_REF) {
+	if (wb->mode == MODE_FOREIGN_REF) {
 		// 4. strides
 		wb_push(wb, arr_obj->strides, sizeof(npy_intp)*arr_obj->nd);
 		// 5. data
 		skynet_foreign_incref(arr_obj->foreign_base);
 		wb_ref_base(wb, arr_obj->foreign_base, arr_obj->dataptr);
-	} else if (wb->mode == WB_MODE_FOREIGN_REMOTE) {
+	} else if (wb->mode == MODE_FOREIGN_REMOTE) {
 		// 4. data
 		struct numsky_nditer * iter = numsky_nditer_create(arr_obj);
 		for(int i=0;i<iter->ao->count;numsky_nditer_next(iter), i++) {
@@ -304,13 +300,13 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 			wb_free(wb);
 			luaL_error(L, "numsky.ndarray's nd must be <= 31");
 		}
-		if (wb->mode == WB_MODE_FOREIGN_REF) {
+		if (wb->mode == MODE_FOREIGN_REF) {
 			if(arr->foreign_base == NULL) {
 				wb_free(wb);
 				luaL_error(L, "foreign -base can't be null");
 				return ;
 			}
-		} else if(wb->mode != WB_MODE_FOREIGN_REMOTE) {
+		} else if(wb->mode != MODE_FOREIGN_REMOTE) {
 			wb_free(wb);
 			luaL_error(L, "lua pack can't take numsky array");
 		}
@@ -324,7 +320,7 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 }
 
 char** mode_hook(int mode, char *buffer, intptr_t nextbase) {
-	if(mode == WB_MODE_FOREIGN_REF && nextbase != 0) {
+	if((mode == MODE_FOREIGN_REF && nextbase != 0)) {
 		char ** hookptr = skynet_malloc(sizeof(char*));
 		*hookptr = buffer;
 		return hookptr;

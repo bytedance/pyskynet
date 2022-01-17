@@ -4,12 +4,12 @@
 
 #include "foreign_seri/read_block.h"
 
-void rb_init(struct read_block * rb, char * buffer, int64_t size, bool isforeign) {
+void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->buffer = buffer;
 	rb->len = size;
 	rb->ptr = 0;
-	rb->isforeign = isforeign;
-	if(isforeign) {
+	rb->mode = mode;
+	if(mode!=MODE_LUA) {
 		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
 	}
 }
@@ -176,10 +176,8 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	if(pchar == NULL) {
 		return NULL;
 	}
-	char typechar = pchar[0] & 0x7F;
-	bool isref = pchar[0] >> 7;
 	// 2. init from dimensions
-	struct numsky_ndarray *arr = numsky_ndarray_precreate(nd, typechar);
+	struct numsky_ndarray *arr = numsky_ndarray_precreate(nd, pchar[0]);
 	for(int i=0;i<nd;i++){
 		bool ok = rb_uint(rb, &arr->dimensions[i]);
 		if(!ok) {
@@ -190,7 +188,7 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 	// 3. build
 	struct skynet_foreign *foreign_base;
 	char *dataptr;
-	if(isref) {
+	if(rb->mode==MODE_FOREIGN_REF) {
 		numsky_ndarray_autocount(arr);
 		npy_intp *strides = (npy_intp*)rb_read(rb, sizeof(npy_intp)*nd);
 		if(strides == NULL) {
@@ -226,7 +224,7 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
 		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
-	} else {
+	} else if (rb->mode==MODE_FOREIGN_REMOTE){
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base
 		size_t datasize = arr->count*arr->dtype->elsize;
@@ -239,6 +237,9 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 		foreign_base = skynet_foreign_newbytes(datasize);
 		dataptr = foreign_base->data;
 		memcpy(dataptr, pdata, datasize);
+	} else {
+		numsky_ndarray_destroy(arr);
+		return NULL;
 	}
 	numsky_ndarray_refdata(arr, foreign_base, dataptr);
 	return arr;
@@ -326,20 +327,20 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 	return aheadptr;
 }
 
-char *mode_unhook(bool isforeign, char* buffer) {
-	if(isforeign) {
-		char ** hookptr = (char**)buffer;
-		if(*hookptr==NULL) {
+char *mode_unhook(int mode, char* buffer) {
+	if(mode!=MODE_LUA) {
+		intptr_t* hookptr = (intptr_t*)buffer;
+		if((hookptr[0] & ~1) == 0) {
 			return buffer;
 		} else {
-			return *hookptr;
+			return (char*)(hookptr[0]);
 		}
 	} else {
 		return buffer;
 	}
 }
 
-int lmode_unpack(bool isforeign, lua_State *L) {
+int lmode_unpack(int mode, lua_State *L) {
 	char * buffer;
 	int64_t len;
 	int type1 = lua_type(L, 1);
@@ -361,9 +362,9 @@ int lmode_unpack(bool isforeign, lua_State *L) {
 	}
 
 	lua_settop(L,1);
-	char *realbuffer = mode_unhook(isforeign, buffer);
+	char *realbuffer = mode_unhook(mode, buffer);
 	struct read_block rb;
-	rb_init(&rb, realbuffer, len, isforeign);
+	rb_init(&rb, realbuffer, len, mode);
 	for (int i=0;;i++) {
 		if (i%8==7) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);

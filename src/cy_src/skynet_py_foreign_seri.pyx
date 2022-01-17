@@ -19,21 +19,21 @@ from skynet_py cimport *
 cdef extern from "skynet_py_foreign_seri_ext.c":
     cdef enum:
         MODE_LUA
-        WB_MODE_FOREIGN_REF
-        WB_MODE_FOREIGN_REMOTE
+        MODE_FOREIGN_REF
+        MODE_FOREIGN_REMOTE
     ctypedef int intptr_t
 
     # for read
     uint8_t COMBINE_TYPE(uint8_t, uint8_t)
     cdef struct read_block:
-        bint isforeign
-    void rb_init(read_block* rb, char* buffer, int64_t size, bint isforeign)
+        int mode
+    void rb_init(read_block* rb, char* buffer, int64_t size, int mode)
     void* rb_read(read_block* rb, int64_t sz)
     bint rb_get_integer(read_block *rb, int cookie, lua_Integer *pout) except 0
     bint rb_get_real(read_block *rb, double *pout) except 0
     bint rb_get_pointer(read_block *rb, void ** pout) except 0
     char* rb_get_string(read_block *rb, uint8_t ahead, size_t *psize) except NULL
-    char *mode_unhook(bint isforeign, char* buf)
+    char *mode_unhook(int mode, char* buf)
 
     # for write
     cdef struct write_block:
@@ -161,7 +161,7 @@ cdef void pyrb_unpack_table(l, read_block *rb, lua_Integer array_size) except *:
         l.append(next_t)
 
 # extern
-cdef pymode_unpack(bint isforeign, capsule_or_bytes, py_sz):
+cdef pymode_unpack(int mode, capsule_or_bytes, py_sz):
     cdef const char *name
     cdef char *ptr
     cdef char *realbuffer
@@ -178,8 +178,8 @@ cdef pymode_unpack(bint isforeign, capsule_or_bytes, py_sz):
         sz = PyBytes_GET_SIZE(capsule_or_bytes)
     else:
         raise Exception("Unexcept type %s " % str(type(capsule_or_bytes)))
-    realbuffer = mode_unhook(isforeign, ptr)
-    rb_init(&rb, realbuffer, sz, isforeign);
+    realbuffer = mode_unhook(mode, ptr)
+    rb_init(&rb, realbuffer, sz, mode);
     l = []
     while True:
         if pyrb_unpack_one(l, &rb, 0) == NULL:
@@ -233,9 +233,9 @@ cdef void pywb_pack_one(write_block* wb, py_arg, int depth) except *:
         if not PyArray_foreign_check_typechar(py_arg):
             wb_free(wb)
             raise Exception("unexception typechar %s"%py_arg.dtype.char)
-        if wb.mode == WB_MODE_FOREIGN_REF:
+        if wb.mode == MODE_FOREIGN_REF:
             pywb_put_PyArray(wb, py_arg, None)
-        elif wb.mode == WB_MODE_FOREIGN_REMOTE:
+        elif wb.mode == MODE_FOREIGN_REMOTE:
             arr_iter = py_arg.flat
             pywb_put_PyArray(wb, py_arg, arr_iter)
         else:
@@ -294,19 +294,19 @@ def luapack(*args):
     return pymode_pack(MODE_LUA, args)
 
 def luaunpack(capsule, size=None):
-    return pymode_unpack(0, capsule, size)
+    return pymode_unpack(MODE_LUA, capsule, size)
 
 def pack(*args):
-    return pymode_pack(WB_MODE_FOREIGN_REF, args)
+    return pymode_pack(MODE_FOREIGN_REF, args)
 
 def unpack(capsule, size=None):
-    return pymode_unpack(1, capsule, size)
+    return pymode_unpack(MODE_FOREIGN_REF, capsule, size)
 
 def remotepack(*args):
-    return pymode_pack(WB_MODE_FOREIGN_REMOTE, args)
+    return pymode_pack(MODE_FOREIGN_REMOTE, args)
 
 def remoteunpack(capsule, size=None):
-    return pymode_unpack(1, capsule, size)
+    return pymode_unpack(MODE_FOREIGN_REMOTE, capsule, size)
 
 def trash(capsule, size_t sz):
     cdef void *ptr = PyCapsule_GetPointer(capsule, "cptr")
