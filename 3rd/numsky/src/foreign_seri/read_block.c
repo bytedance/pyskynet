@@ -333,12 +333,16 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 	return aheadptr;
 }
 
-char *foreign_unhook(char* buffer) {
-	intptr_t head = *((intptr_t*)buffer);
-	if((head & 1) != 0) {
+char *mode_unhook(int mode, char* buffer) {
+	if(mode == MODE_LUA) {
 		return buffer;
 	} else {
-		return (char*)(head);
+		intptr_t head = *((intptr_t*)buffer);
+		if((head & 1) != 0) {
+			return buffer;
+		} else {
+			return (char*)(head);
+		}
 	}
 }
 
@@ -365,7 +369,7 @@ int lmode_unpack(int mode, lua_State *L) {
 
 	lua_settop(L,1);
 	struct read_block rb;
-	char *realbuffer = foreign_unhook(buffer);
+	char *realbuffer = mode_unhook(mode, buffer);
 	rb_init(&rb, realbuffer, len, mode);
 	for (int i=0;;i++) {
 		if (i%8==7) {
@@ -377,8 +381,8 @@ int lmode_unpack(int mode, lua_State *L) {
 	}
 
 	if(realbuffer != buffer) {
-		skynet_free(realbuffer);
 		// Need to free buffer if it's hook buffer
+		skynet_free(realbuffer);
 	} else {
 		// Need not free buffer
 	}

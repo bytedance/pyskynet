@@ -33,7 +33,7 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     bint rb_get_real(read_block *rb, double *pout) except 0
     bint rb_get_pointer(read_block *rb, void ** pout) except 0
     char* rb_get_string(read_block *rb, uint8_t ahead, size_t *psize) except NULL
-    char *foreign_unhook(char* buf)
+    char *mode_unhook(int mode, char* buf)
 
     # for write
     cdef struct write_block:
@@ -178,7 +178,7 @@ cdef pymode_unpack(int mode, capsule_or_bytes, py_sz):
         sz = PyBytes_GET_SIZE(capsule_or_bytes)
     else:
         raise Exception("Unexcept type %s " % str(type(capsule_or_bytes)))
-    realbuffer = foreign_unhook(ptr)
+    realbuffer = mode_unhook(mode, ptr)
     rb_init(&rb, realbuffer, sz, mode);
     l = []
     while True:
