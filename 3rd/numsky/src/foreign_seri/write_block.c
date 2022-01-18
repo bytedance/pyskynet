@@ -45,7 +45,7 @@ void wb_free(struct write_block *wb) {
 }
 
 void wb_ref_base(struct write_block *wb, struct skynet_foreign* foreign_base, char *dataptr) {
-	*((intptr_t*)(wb->buffer + wb->nextbase)) = wb->len;
+	*((intptr_t*)(wb->buffer + wb->nextbase)) = (wb->len << 1) | 1;
 	wb_push(wb, &(foreign_base), sizeof(foreign_base));
 	wb_push(wb, &(dataptr), sizeof(dataptr));
 	wb->nextbase = wb->len;
@@ -319,8 +319,9 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	}
 }
 
-char** mode_hook(int mode, char *buffer, intptr_t nextbase) {
-	if((mode == MODE_FOREIGN_REF && nextbase != 0)) {
+char** foreign_hook(char *buffer) {
+	intptr_t head = *((intptr_t*)buffer);
+	if((head & 1) != 0) {
 		char ** hookptr = skynet_malloc(sizeof(char*));
 		*hookptr = buffer;
 		return hookptr;
@@ -336,15 +337,7 @@ int lmode_pack(int mode, lua_State *L) {
 	for (int i=1;i<=n;i++) {
 		lwb_pack_one(L, &wb, i, 0);
 	}
-	char ** hookptr = mode_hook(mode, wb.buffer, wb.nextbase);
-	if(hookptr != NULL) {
-		lua_pushlightuserdata(L, hookptr);
-		lua_pushinteger(L, wb.len);
-		lua_pushlightuserdata(L, wb.buffer);
-		return 3;
-	} else {
-		lua_pushlightuserdata(L, wb.buffer);
-		lua_pushinteger(L, wb.len);
-		return 2;
-	}
+	lua_pushlightuserdata(L, wb.buffer);
+	lua_pushinteger(L, wb.len);
+	return 2;
 }

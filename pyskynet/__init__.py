@@ -35,7 +35,7 @@ pyskynet.ret = pyskynet_proto.ret
 
 
 def seri(*args):
-    msg_ptr, msg_size, real_ptr = foreign_seri.remotepack(*args)
+    msg_ptr, msg_size = foreign_seri.remotepack(*args)
     re_str = foreign_seri.tobytes(msg_ptr, msg_size)
     foreign_seri.trash(msg_ptr, msg_size)
     return re_str
@@ -56,7 +56,7 @@ def getenv(key):
 def setenv(key, value):
     if skynet_py_main.self() != 0:
         assert (key is None) or (getenv(key) is None), "Can't setenv exist key : %s " % key
-    msg_ptr, msg_size, real_ptr = foreign_seri.remotepack(value)
+    msg_ptr, msg_size = foreign_seri.remotepack(value)
     newkey = skynet_py_main.setlenv(key, msg_ptr, msg_size)
     foreign_seri.trash(msg_ptr, msg_size)
     return newkey

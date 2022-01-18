@@ -10,7 +10,7 @@ void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->ptr = 0;
 	rb->mode = mode;
 	if(mode!=MODE_LUA) {
-		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
+		rb->nextbase = ((intptr_t*)rb_read(rb, sizeof(intptr_t)))[0] >> 1;
 	}
 }
 
@@ -223,7 +223,12 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 			return NULL;
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
-		rb->nextbase = *((intptr_t*)rb_read(rb, sizeof(intptr_t)));
+		intptr_t* pnextbase = (intptr_t*)rb_read(rb, sizeof(intptr_t));
+		if(pnextbase==NULL) {
+			numsky_ndarray_destroy(arr);
+			return NULL;
+		}
+		rb->nextbase = pnextbase[0] >> 1;
 	} else if (rb->mode==MODE_FOREIGN_REMOTE){
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base
@@ -327,16 +332,12 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 	return aheadptr;
 }
 
-char *mode_unhook(int mode, char* buffer) {
-	if(mode!=MODE_LUA) {
-		intptr_t* hookptr = (intptr_t*)buffer;
-		if((hookptr[0] & ~1) == 0) {
-			return buffer;
-		} else {
-			return (char*)(hookptr[0]);
-		}
-	} else {
+char *foreign_unhook(char* buffer) {
+	intptr_t head = ((intptr_t*)buffer);
+	if((head >> 1) == 0) {
 		return buffer;
+	} else {
+		return (char*)(head);
 	}
 }
 
@@ -362,9 +363,8 @@ int lmode_unpack(int mode, lua_State *L) {
 	}
 
 	lua_settop(L,1);
-	char *realbuffer = mode_unhook(mode, buffer);
 	struct read_block rb;
-	rb_init(&rb, realbuffer, len, mode);
+	rb_init(&rb, buffer, len, mode);
 	for (int i=0;;i++) {
 		if (i%8==7) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
@@ -374,11 +374,7 @@ int lmode_unpack(int mode, lua_State *L) {
 		}
 	}
 
-	if(realbuffer!=buffer) {
-		// Need free buffer if buffer is hookptr
-		skynet_free(realbuffer);
-	}
-
+	// Need not free buffer
 
 	return lua_gettop(L) - 1;
 }

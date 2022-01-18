@@ -33,7 +33,7 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     bint rb_get_real(read_block *rb, double *pout) except 0
     bint rb_get_pointer(read_block *rb, void ** pout) except 0
     char* rb_get_string(read_block *rb, uint8_t ahead, size_t *psize) except NULL
-    char *mode_unhook(int mode, char* buf)
+    char *foreign_unhook(char* buf)
 
     # for write
     cdef struct write_block:
@@ -50,7 +50,7 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     void wb_put_string(write_block *wb, const char *ptr, int sz)
     void wb_put_pointer(write_block *wb, void *v)
     void wb_write(write_block *wb, const void *buf, int64_t sz)
-    char** mode_hook(int mode, char *buf, intptr_t nextbase)
+    char** foreign_hook(char *buf)
 
     cdef enum:
         TYPE_NIL
@@ -178,7 +178,7 @@ cdef pymode_unpack(int mode, capsule_or_bytes, py_sz):
         sz = PyBytes_GET_SIZE(capsule_or_bytes)
     else:
         raise Exception("Unexcept type %s " % str(type(capsule_or_bytes)))
-    realbuffer = mode_unhook(mode, ptr)
+    realbuffer = foreign_unhook(ptr)
     rb_init(&rb, realbuffer, sz, mode);
     l = []
     while True:
@@ -276,11 +276,7 @@ cdef pymode_pack(int mode, argtuple):
     wb_init(&wb, mode)
     for one in argtuple:
         pywb_pack_one(&wb, one, 0)
-    hookptr = mode_hook(mode, wb.buffer, wb.nextbase)
-    if hookptr == NULL:
-        return PyCapsule_New(wb.buffer, "cptr", NULL), wb.len, None
-    else:
-        return PyCapsule_New(hookptr, "cptr", NULL), wb.len, PyCapsule_New(wb.buffer, "cptr", NULL)
+    return PyCapsule_New(wb.buffer, "cptr", NULL), wb.len
 
 #########################
 # outside pack & unpack #
