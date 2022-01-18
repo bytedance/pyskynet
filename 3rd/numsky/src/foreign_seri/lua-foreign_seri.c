@@ -27,6 +27,21 @@ static int remoteunpack(lua_State *L) {
 	return lmode_unpack(MODE_FOREIGN_REMOTE, L);
 }
 
+static int lpackhook(lua_State *L){
+	if(lua_islightuserdata(L, 1)) {
+		char * ptr = (char*)lua_touserdata(L,1);
+		char ** hookptr = foreign_hook(ptr);
+		if(hookptr == NULL) {
+			lua_pushnil(L);
+		} else {
+			lua_pushlightuserdata(L, hookptr);
+		}
+		return 1;
+	} else {
+		return luaL_error(L, "packhook must take a lightuserdata");
+	}
+}
+
 static int ltostring(lua_State *L) {
 	int t = lua_type(L,1);
 	switch (t) {
@@ -73,6 +88,8 @@ static const struct luaL_Reg l_methods[] = {
 
     { "remotepack", remotepack },
     { "remoteunpack", remoteunpack },
+
+    { "packhook", lpackhook},
 
     { "tostring", ltostring },
     { "trash", ltrash },

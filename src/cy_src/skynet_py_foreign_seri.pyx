@@ -304,6 +304,14 @@ def remotepack(*args):
 def remoteunpack(capsule, size=None):
     return pymode_unpack(MODE_FOREIGN_REMOTE, capsule, size)
 
+def packhook(capsule):
+    cdef char *ptr = <char*>PyCapsule_GetPointer(capsule, "cptr")
+    cdef char **hookptr = foreign_hook(ptr)
+    if hookptr == NULL:
+        return None
+    else:
+        return PyCapsule_New(hookptr, "cptr", NULL)
+
 def trash(capsule, size_t sz):
     cdef void *ptr = PyCapsule_GetPointer(capsule, "cptr")
     skynet_free(ptr)
