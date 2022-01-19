@@ -4,9 +4,8 @@
 ###############################
 import pyskynet.boot
 import pyskynet.skynet_py_mq
-import pyskynet.foreign
+import pyskynet.foreign as foreign
 import pyskynet.skynet_py_main as skynet_py_main
-import pyskynet.skynet_py_foreign_seri as foreign_seri
 import pyskynet.proto as pyskynet_proto
 
 __version__ = '0.1.5'
@@ -34,31 +33,20 @@ pyskynet.ret = pyskynet_proto.ret
 #################
 
 
-def seri(*args):
-    msg_ptr, msg_size = foreign_seri.remotepack(*args)
-    re_str = foreign_seri.tobytes(msg_ptr, msg_size)
-    foreign_seri.trash(msg_ptr, msg_size)
-    return re_str
-
-
-def deseri(arg_str):
-    return foreign_seri.remoteunpack(arg_str)
-
-
 def getenv(key):
     data = skynet_py_main.getlenv(key)
     if data is None:
         return None
     else:
-        return foreign_seri.remoteunpack(data)[0]
+        return foreign.remoteunpack(data)[0]
 
 
 def setenv(key, value):
     if skynet_py_main.self() != 0:
         assert (key is None) or (getenv(key) is None), "Can't setenv exist key : %s " % key
-    msg_ptr, msg_size = foreign_seri.remotepack(value)
+    msg_ptr, msg_size = foreign.remotepack(value)
     newkey = skynet_py_main.setlenv(key, msg_ptr, msg_size)
-    foreign_seri.trash(msg_ptr, msg_size)
+    foreign.trash(msg_ptr)
     return newkey
 
 

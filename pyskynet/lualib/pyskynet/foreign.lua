@@ -18,8 +18,10 @@ foreign.PTYPE_FOREIGN = PTYPE_FOREIGN
 
 foreign.remotepack = assert(foreign_seri.remotepack)
 foreign.remoteunpack = assert(foreign_seri.remoteunpack)
-foreign.refpack = assert(foreign_seri.refpack)
-foreign.refunpack = assert(foreign_seri.refunpack)
+foreign.trash = assert(foreign_seri.trash)
+
+local refpack = assert(foreign_seri.refpack)
+local refunpack = assert(foreign_seri.refunpack)
 
 foreign.CMD = setmetatable({}, {
 	__call=function(t, first, ...)
@@ -33,7 +35,7 @@ foreign.CMD = setmetatable({}, {
 
 local function __foreign_dispatch(session, source, ...)
 	if session ~= 0 then
-        local msg_ptr, msg_size = foreign_seri.refpack(foreign.CMD(...))
+        local msg_ptr, msg_size = refpack(foreign.CMD(...))
 		skynet.ret(msg_ptr, msg_size)
 	else
 		foreign.CMD(...)
@@ -49,7 +51,6 @@ local function __foreign_remote_dispatch(session, source, ...)
 	end
 end
 
-
 do
 	local REG = skynet.register_protocol
 
@@ -59,7 +60,7 @@ do
 		pack = function()
             error("use foreign.someapi(xxx, ...) instead of skynet.someapi(xxx, 'foreign', ...) when packing foreign message")
         end,
-		unpack = foreign_seri.refunpack,
+		unpack = refunpack,
 		dispatch = __foreign_dispatch,
 	}
 
@@ -96,16 +97,16 @@ end
 local _, yield_call = debug.getupvalue(skynet.rawcall, i)
 
 function foreign.call(addr, ...)
-    local msg_ptr, msg_size = foreign_seri.refpack(...)
+    local msg_ptr, msg_size = refpack(...)
 	local session = csend(addr, PTYPE_FOREIGN , nil , msg_ptr, msg_size)
 	if session == nil then
 		error("call to invalid address " .. skynet.address(addr))
 	end
-	return foreign_seri.refunpack(yield_call(addr, session))
+	return refunpack(yield_call(addr, session))
 end
 
 function foreign.send(addr, ...)
-    local msg_ptr, msg_size = foreign_seri.refpack(...)
+    local msg_ptr, msg_size = refpack(...)
 	return csend(addr, PTYPE_FOREIGN , 0, msg_ptr, msg_size)
 end
 

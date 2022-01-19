@@ -49,7 +49,9 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     void wb_put_string(write_block *wb, const char *ptr, int sz)
     void wb_put_pointer(write_block *wb, void *v)
     void wb_write(write_block *wb, const void *buf, int64_t sz)
+
     char** foreign_hook(char *buf)
+    void foreign_trash(char *buf)
 
     cdef enum:
         TYPE_NIL
@@ -281,10 +283,6 @@ cdef pymode_pack(int mode, argtuple):
 # outside pack & unpack #
 #########################
 
-def tobytes(capsule, size_t size):
-    cdef char *ptr = <char *>PyCapsule_GetPointer(capsule, PyCapsule_GetName(capsule))
-    return ptr[:size]
-
 def luapack(*args):
     return pymode_pack(MODE_LUA, args)
 
@@ -311,6 +309,6 @@ def packhook(capsule):
     else:
         return PyCapsule_New(hookptr, "cptr", NULL)
 
-def trash(capsule, size_t sz):
-    cdef void *ptr = PyCapsule_GetPointer(capsule, "cptr")
-    skynet_free(ptr)
+def trash(capsule):
+    cdef char *ptr = <char*>PyCapsule_GetPointer(capsule, "cptr")
+    foreign_trash(ptr)

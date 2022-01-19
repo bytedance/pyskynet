@@ -1,6 +1,5 @@
 
 local skynet = require("skynet")
-local core = require("skynet.core")
 local foreign = require("pyskynet.foreign")
 local pyskynet_modify = require("pyskynet.modify")
 
@@ -30,31 +29,18 @@ pyskynet.ret = skynet.ret
 
 pyskynet.self = skynet.self
 
-local foreign_seri = require "pyskynet.foreign_seri"
-
-function pyskynet.seri(...)
-	local msg_ptr, msg_size = foreign_seri.remotepack(...)
-	local re_str = skynet.tostring(msg_ptr, msg_size)
-	skynet.trash(msg_ptr, msg_size)
-	return re_str
-end
-
-function pyskynet.deseri(arg_str)
-	return foreign_seri.remoteunpack(arg_str)
-end
-
 function pyskynet.getenv(k)
 	local data = pyskynet_modify.getlenv(k)
-	return (foreign_seri.remoteunpack(data))
+	return (foreign.remoteunpack(data))
 end
 
 function pyskynet.setenv(k, v)
 	if k ~= nil then
 		assert(pyskynet.getenv(k) == nil, "Can't setenv exist key : " .. k)
 	end
-	local msg_ptr, msg_size = foreign_seri.remotepack(v)
+	local msg_ptr, msg_size = foreign.remotepack(v)
 	local newkey = pyskynet_modify.setlenv(k, msg_ptr, msg_size)
-	skynet.trash(msg_ptr, msg_size)
+	foreign.trash(msg_ptr)
 	return newkey
 end
 

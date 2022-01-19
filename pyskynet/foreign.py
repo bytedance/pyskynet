@@ -31,10 +31,10 @@ class CMDDispatcher(object):
 
 CMD = CMDDispatcher()
 
-refpack = foreign_seri.refpack
-refunpack = foreign_seri.refunpack
 remotepack = foreign_seri.remotepack
 remoteunpack = foreign_seri.remoteunpack
+
+trash = foreign_seri.trash
 
 
 def __foreign_dispatch(session, source, argtuple):
@@ -56,6 +56,7 @@ def __foreign_remote_dispatch(session, source, argtuple):
 
 def __dontpackhere():
     raise pyskynet_proto.PySkynetCallException("don't use pack here")
+
 # dispatch foreign message
 pyskynet_proto.register_protocol(
         id=PTYPE_FOREIGN,

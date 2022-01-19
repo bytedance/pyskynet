@@ -34,41 +34,14 @@ static int lpackhook(lua_State *L){
 	}
 }
 
-static int ltostring(lua_State *L) {
-	int t = lua_type(L,1);
-	switch (t) {
-	case LUA_TSTRING: {
-		lua_settop(L, 1);
-		return 1;
-	}
-	case LUA_TLIGHTUSERDATA: {
-		char * msg = (char*)lua_touserdata(L,1);
-		int sz = luaL_checkinteger(L,2);
-		lua_pushlstring(L,msg,sz);
-		return 1;
-	}
-	default:
-		return 0;
-	}
-}
-
 static int ltrash(lua_State *L) {
-	int t = lua_type(L,1);
-	switch (t) {
-	case LUA_TSTRING: {
-		break;
+	if(lua_islightuserdata(L, 1)) {
+		char * ptr = (char*)lua_touserdata(L,1);
+        foreign_trash(ptr);
+		return 0;
+	} else {
+		return luaL_error(L, "packhook must take a lightuserdata");
 	}
-	case LUA_TLIGHTUSERDATA: {
-		void * msg = lua_touserdata(L,1);
-		luaL_checkinteger(L,2);
-		skynet_free(msg);
-		break;
-	}
-	default:
-		luaL_error(L, "skynet.trash invalid param %s", lua_typename(L,t));
-	}
-
-	return 0;
 }
 
 static const struct luaL_Reg l_methods[] = {
@@ -79,8 +52,6 @@ static const struct luaL_Reg l_methods[] = {
     { "remoteunpack", remoteunpack },
 
     { "packhook", lpackhook},
-
-    { "tostring", ltostring },
     { "trash", ltrash },
 
     { NULL,  NULL },

@@ -112,7 +112,7 @@ def rawsend(dst, type_name_or_id, msg_ptr, msg_size):
         rawsend in skynet.lua, send don't need ret
     """
     psproto = pyskynet_proto_dict[type_name_or_id]
-    skynet_py_mq.csend(dst, psproto.id, 0, msg_ptr, msg_size)
+    return skynet_py_mq.csend(dst, psproto.id, 0, msg_ptr, msg_size) != None
 
 
 # skynet.lua
@@ -126,7 +126,7 @@ def call(addr, type_name_or_id, *args):
 def send(addr, type_name_or_id, *args):
     psproto = pyskynet_proto_dict[type_name_or_id]
     msg_ptr, msg_size = psproto.pack(*args)
-    rawsend(addr, type_name_or_id, msg_ptr, msg_size)
+    return rawsend(addr, type_name_or_id, msg_ptr, msg_size)
 
 
 # skynet.lua
@@ -138,10 +138,9 @@ def ret(ret_msg_ptr, ret_size):
     session = co_to_remote_session.pop(co)
     source = co_to_remote_address.pop(co)
     if session == 0:
-        pass  # send don't need ret
+        return False
     else:
-        skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_RESPONSE, session, ret_msg_ptr, ret_size)
-    # TODO if package is to large, c++ will trigger some exception...
+        return skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_RESPONSE, session, ret_msg_ptr, ret_size) != None
 
 
 ################
