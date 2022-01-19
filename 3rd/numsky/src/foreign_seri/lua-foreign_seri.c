@@ -57,8 +57,7 @@ static const struct luaL_Reg l_methods[] = {
     { NULL,  NULL },
 };
 
-LUAMOD_API int
-luaopen_pyskynet_foreign_seri(lua_State *L) {
+LUAMOD_API int luaopen_pyskynet_foreign_seri(lua_State *L) {
 	luaL_checkversion(L);
 
 	luaL_newlib(L, l_methods);

@@ -58,10 +58,15 @@ inline void fbuf_lastbase_put(union fbuf_i64 *ptr, int64_t lastbase) {
 }
 
 inline void foreign_trash(char *buffer) {
-	if(fbuf_isbuffer((union fbuf_i64*)buffer)) {
+    union fbuf_i64* p_header = (union fbuf_i64*)buffer;
+	if(fbuf_isbuffer(p_header)) {
+        int64_t nextbase = fbuf_nextbase_get(p_header);
+        if(nextbase > 0) {
+            // TODO trash ref pack
+        }
 		skynet_free(buffer);
 	} else {
-		// TODO for ref trash
+		skynet_free(buffer);
 	}
 }
 

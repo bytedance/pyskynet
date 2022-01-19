@@ -2,10 +2,64 @@
 import sys
 sys.path.append("../")
 
+import pyskynet
 import pyskynet.foreign as foreign
 import pyskynet.skynet_py_foreign_seri as foreign_seri
 
 import numpy as np
+
+pyskynet.start()
+
+echo_service = None
+
+@foreign.dispatch("echo")
+def _echo(*args):
+    return args
+
+def turnon_lua():
+    global echo_service
+    echo_service = pyskynet.scriptservice("""
+            local pyskynet = require "pyskynet"
+            local skynet = require "skynet"
+            local foreign = require "pyskynet.foreign"
+            local foreign_seri = require "pyskynet.foreign_seri"
+            pyskynet.start(function()
+                local function trash_ret(msg, ...)
+                    foreign_seri.trash(msg)
+                    return ...
+                end
+                foreign.dispatch("echo", function(...)
+                    return ...
+                end)
+                --[[foreign.dispatch("echo_ref", function(...)
+                    local msg, sz = foreign_seri.refpack(...)
+                    return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                end)
+                foreign.dispatch("echo_ref_hook", function(...)
+                    local msg, sz = foreign_seri.refpack(...)
+                    local hook = foreign_seri.packhook(msg)
+                    if hook then
+                        return trash_ret(hook, foreign_seri.refunpack(hook, sz))
+                    else
+                        return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                    end
+                end)]]
+                foreign.dispatch("echo_remote", function(...)
+                    local msg, sz = foreign_seri.refpack(...)
+                    return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                end)
+                foreign.dispatch("echo_remote_hook", function(...)
+                    local msg, sz = foreign_seri.remotepack(...)
+                    local hook = foreign_seri.packhook(msg)
+                    if hook then
+                        return trash_ret(hook, foreign_seri.remoteunpack(hook, sz))
+                    else
+                        return trash_ret(msg, foreign_seri.remoteunpack(msg, sz))
+                    end
+                end)
+            end)
+    """)
+
 
 def equal(left, right):
     if type(left) != type(right):
@@ -41,35 +95,40 @@ def tostring(arg):
         return arg
 
 
-
 def check_case(*args):
+    def check_equal(name, left, right):
+        for i in range(len(left)):
+            assert equal(left[i], right[i]), "check error :%s:%s,%s,%s,%s"%(name,
+                    left[i],  type(left[i]),
+                    right[i], type(right[i]))
     for name, pack, unpack in [
-            ("foreign", foreign_seri.refpack, foreign_seri.refunpack),
+            #("foreign", foreign_seri.refpack, foreign_seri.refunpack),
             ("foreign_remote", foreign_seri.remotepack, foreign_seri.remoteunpack)]:
         # pack to capsule
         msg_ptr, msg_size = pack(*args)
         result = unpack(msg_ptr, msg_size)
-        for i in range(len(args)):
-            assert equal(args[i], result[i]), "check error :%s,%s,%s,%s,%s"%(name,
-                    args[i],  type(args[i]),
-                    result[i], type(result[i]))
+        foreign.trash(msg_ptr)
+        check_equal(name, result, args)
         # pack hook to capsule
         msg_ptr, msg_size = pack(*args)
         hook_ptr = foreign_seri.packhook(msg_ptr)
         if hook_ptr:
             result = unpack(hook_ptr, msg_size)
-            for i in range(len(args)):
-                assert equal(args[i], result[i]), "check error :%s,%s,%s,%s,%s"%(name,
-                        args[i],  type(args[i]),
-                        result[i], type(result[i]))
+            foreign.trash(hook_ptr)
+            check_equal(name, result, args)
+        else:
+            foreign.trash(msg_ptr)
         # pack to bytes
-        msg_ptr, msg_size = pack(*args)
-        msg_bytes = foreign_seri.tobytes(msg_ptr, msg_size)
-        result = unpack(msg_bytes)
-        for i in range(len(args)):
-            assert equal(args[i], result[i]), "check error :%s,%s,%s,%s,%s"%(name,
-                    args[i],  type(args[i]),
-                    result[i], type(result[i]))
+        #msg_ptr, msg_size = pack(*args)
+        #msg_bytes = foreign_seri.tobytes(msg_ptr, msg_size)
+        #result = unpack(msg_bytes)
+        #check_equal(name, result, args)
+    if echo_service:
+        for name in ["echo", "echo_remote", "echo_remote_hook"]:
+            result = foreign.call(echo_service, name, *args)
+            check_equal(name, result, args)
+    result = foreign.call(".python", "echo", *args)
+    check_equal(name, result, args)
     print("check ok:", *[tostring(arg) for arg in args])
 
 def test_number():
@@ -115,7 +174,9 @@ def test_arr():
     #t6 = t5.reshape(100000,10000)
     check_case(t1,t2,t3,t4,t5)
 
-test_number()
-test_dict()
-test_arr()
-test_list()
+turnon_lua()
+for i in range(10000000000):
+    test_number()
+    test_dict()
+    test_arr()
+    test_list()

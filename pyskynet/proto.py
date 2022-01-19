@@ -112,7 +112,7 @@ def rawsend(dst, type_name_or_id, msg_ptr, msg_size):
         rawsend in skynet.lua, send don't need ret
     """
     psproto = pyskynet_proto_dict[type_name_or_id]
-    return skynet_py_mq.csend(dst, psproto.id, 0, msg_ptr, msg_size) != None
+    return skynet_py_mq.csend(dst, psproto.id, 0, msg_ptr, msg_size) is not None
 
 
 # skynet.lua
@@ -140,7 +140,7 @@ def ret(ret_msg_ptr, ret_size):
     if session == 0:
         return False
     else:
-        return skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_RESPONSE, session, ret_msg_ptr, ret_size) != None
+        return skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_RESPONSE, session, ret_msg_ptr, ret_size) is not None
 
 
 ################
