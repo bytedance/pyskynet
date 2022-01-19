@@ -291,10 +291,10 @@ def luapack(*args):
 def luaunpack(capsule, size=None):
     return pymode_unpack(MODE_LUA, capsule, size)
 
-def pack(*args):
+def refpack(*args):
     return pymode_pack(MODE_FOREIGN_REF, args)
 
-def unpack(capsule, size=None):
+def refunpack(capsule, size=None):
     return pymode_unpack(MODE_FOREIGN_REF, capsule, size)
 
 def remotepack(*args):

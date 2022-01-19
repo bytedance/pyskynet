@@ -32,7 +32,6 @@ void wb_init(struct write_block *wb, int mode) {
 	wb->len = 0;
 	wb->mode = mode;
 	if(mode != MODE_LUA) {
-		// set last bit = 1 for diff with pointer (is always even number) when hook
 		int64_t empty = 0;
 		wb_push(wb, &empty, sizeof(empty));
 	}

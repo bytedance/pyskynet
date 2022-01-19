@@ -31,8 +31,8 @@ class CMDDispatcher(object):
 
 CMD = CMDDispatcher()
 
-pack = foreign_seri.pack
-unpack = foreign_seri.unpack
+refpack = foreign_seri.refpack
+refunpack = foreign_seri.refunpack
 remotepack = foreign_seri.remotepack
 remoteunpack = foreign_seri.remoteunpack
 
@@ -41,9 +41,9 @@ def __foreign_dispatch(session, source, argtuple):
     ret = CMD(*argtuple)
     if session != 0:
         if type(ret) == tuple:
-            pyskynet_proto.ret(*foreign_seri.pack(*ret))
+            pyskynet_proto.ret(*foreign_seri.refpack(*ret))
         else:
-            pyskynet_proto.ret(*foreign_seri.pack(ret))
+            pyskynet_proto.ret(*foreign_seri.refpack(ret))
 
 
 def __foreign_remote_dispatch(session, source, argtuple):
@@ -54,13 +54,14 @@ def __foreign_remote_dispatch(session, source, argtuple):
         else:
             pyskynet_proto.ret(*foreign_seri.remotepack(ret))
 
-
+def __dontpackhere():
+    raise pyskynet_proto.PySkynetCallException("don't use pack here")
 # dispatch foreign message
 pyskynet_proto.register_protocol(
         id=PTYPE_FOREIGN,
         name="foreign",
-        pack=foreign_seri.pack,
-        unpack=foreign_seri.unpack,
+        pack=__dontpackhere,
+        unpack=foreign_seri.refunpack,
         dispatch=__foreign_dispatch,
         )
 
@@ -68,7 +69,7 @@ pyskynet_proto.register_protocol(
 pyskynet_proto.register_protocol(
         id=PTYPE_FOREIGN_REMOTE,
         name="foreign_remote",
-        pack=foreign_seri.remotepack,
+        pack=__dontpackhere,
         unpack=foreign_seri.remoteunpack,
         dispatch=__foreign_remote_dispatch,
         )
@@ -95,9 +96,11 @@ def dispatch(cmd=None, func=None):
 
 
 def call(addr, *args):
-    return foreign_seri.unpack(*pyskynet_proto.rawcall(
-        addr, PTYPE_FOREIGN, *foreign_seri.pack(*args)))
+    msg_ptr, msg_size = foreign_seri.refpack(*args)
+    return foreign_seri.refunpack(*pyskynet_proto.rawcall(
+        addr, PTYPE_FOREIGN, msg_ptr, msg_size))
 
 
 def send(addr, *args):
-    pyskynet_proto.rawsend(addr, PTYPE_FOREIGN, *foreign_seri.pack(*args))
+    msg_ptr, msg_size = foreign_seri.refpack(*args)
+    pyskynet_proto.rawsend(addr, PTYPE_FOREIGN, msg_ptr, msg_size)

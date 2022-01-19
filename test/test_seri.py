@@ -44,7 +44,7 @@ def tostring(arg):
 
 def check_case(*args):
     for name, pack, unpack in [
-            ("foreign", foreign_seri.pack, foreign_seri.unpack),
+            ("foreign", foreign_seri.refpack, foreign_seri.refunpack),
             ("foreign_remote", foreign_seri.remotepack, foreign_seri.remoteunpack)]:
         # pack to capsule
         msg_ptr, msg_size = pack(*args)

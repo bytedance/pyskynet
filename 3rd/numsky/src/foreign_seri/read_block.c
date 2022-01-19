@@ -10,7 +10,7 @@ void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->ptr = 0;
 	rb->mode = mode;
 	if(mode!=MODE_LUA) {
-		union fbuf_i64 *ptr = (union fbuf_i64*)rb_read(rb, sizeof(union fbuf_i64));
+		union fbuf_i64* ptr = (union fbuf_i64*)rb_read(rb, sizeof(union fbuf_i64));
 		rb->nextbase = fbuf_nextbase_get(ptr);
 	}
 }

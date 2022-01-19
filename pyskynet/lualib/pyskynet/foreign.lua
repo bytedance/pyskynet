@@ -3,6 +3,7 @@ local foreign_seri = require("pyskynet.foreign_seri")
 local numsky = require("numsky")
 
 local skynet = require("skynet")
+local csend = (require "skynet.core").send
 
 collectgarbage("setpause", 100)
 collectgarbage("setstepmul", 200)
@@ -17,8 +18,8 @@ foreign.PTYPE_FOREIGN = PTYPE_FOREIGN
 
 foreign.remotepack = assert(foreign_seri.remotepack)
 foreign.remoteunpack = assert(foreign_seri.remoteunpack)
-foreign.pack = assert(foreign_seri.pack)
-foreign.unpack = assert(foreign_seri.unpack)
+foreign.refpack = assert(foreign_seri.refpack)
+foreign.refunpack = assert(foreign_seri.refunpack)
 
 foreign.CMD = setmetatable({}, {
 	__call=function(t, first, ...)
@@ -32,7 +33,8 @@ foreign.CMD = setmetatable({}, {
 
 local function __foreign_dispatch(session, source, ...)
 	if session ~= 0 then
-		skynet.ret(foreign_seri.pack(foreign.CMD(...)))
+        local msg_ptr, msg_size = foreign_seri.refpack(foreign.CMD(...))
+		skynet.ret(msg_ptr, msg_size)
 	else
 		foreign.CMD(...)
 	end
@@ -40,7 +42,8 @@ end
 
 local function __foreign_remote_dispatch(session, source, ...)
 	if session ~= 0 then
-		skynet.ret(foreign_seri.remotepack(foreign.CMD(...)))
+        local msg_ptr, msg_size = foreign_seri.remotepack(foreign.CMD(...))
+		skynet.ret(msg_ptr, msg_size)
      else
 		foreign.CMD(...)
 	end
@@ -53,15 +56,19 @@ do
 	REG {
 		name = "foreign",
 		id = PTYPE_FOREIGN,
-		pack = foreign_seri.pack,
-		unpack = foreign_seri.unpack,
+		pack = function()
+            error("use foreign.someapi(xxx, ...) instead of skynet.someapi(xxx, 'foreign', ...) when packing foreign message")
+        end,
+		unpack = foreign_seri.refunpack,
 		dispatch = __foreign_dispatch,
 	}
 
 	REG {
 		name = "foreign_remote",
 		id = PTYPE_FOREIGN_REMOTE,
-		pack = foreign_seri.remotepack,
+		pack = function()
+            error("foreign_remote pack is not recommand to used here")
+        end,
 		unpack = foreign_seri.remoteunpack,
 		dispatch = __foreign_remote_dispatch,
 	}
@@ -82,12 +89,24 @@ function foreign.dispatch(cmd, func)
 	end
 end
 
+local i = 1
+while debug.getupvalue(skynet.rawcall, i) ~= "yield_call" do
+    i=i+1
+end
+local _, yield_call = debug.getupvalue(skynet.rawcall, i)
+
 function foreign.call(addr, ...)
-	return skynet.call(addr, PTYPE_FOREIGN, ...)
+    local msg_ptr, msg_size = foreign_seri.refpack(...)
+	local session = csend(addr, PTYPE_FOREIGN , nil , msg_ptr, msg_size)
+	if session == nil then
+		error("call to invalid address " .. skynet.address(addr))
+	end
+	return foreign_seri.refunpack(yield_call(addr, session))
 end
 
 function foreign.send(addr, ...)
-	skynet.send(addr, PTYPE_FOREIGN, ...)
+    local msg_ptr, msg_size = foreign_seri.refpack(...)
+	return csend(addr, PTYPE_FOREIGN , 0, msg_ptr, msg_size)
 end
 
 return foreign

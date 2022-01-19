@@ -3,14 +3,6 @@
 #include "foreign_seri/read_block.h"
 #include "foreign_seri/write_block.h"
 
-static int luapack(lua_State *L) {
-	return lmode_pack(MODE_LUA, L);
-}
-
-static int luaunpack(lua_State *L) {
-	return lmode_unpack(MODE_LUA, L);
-}
-
 static int refpack(lua_State *L) {
 	return lmode_pack(MODE_FOREIGN_REF, L);
 }
@@ -80,11 +72,8 @@ static int ltrash(lua_State *L) {
 }
 
 static const struct luaL_Reg l_methods[] = {
-    { "luapack" , luapack },
-    { "luaunpack", luaunpack },
-
-    { "pack" , refpack },
-    { "unpack", refunpack },
+    { "refpack" , refpack },
+    { "refunpack", refunpack },
 
     { "remotepack", remotepack },
     { "remoteunpack", remoteunpack },

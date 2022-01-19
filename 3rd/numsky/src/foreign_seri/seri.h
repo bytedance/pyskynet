@@ -49,7 +49,7 @@ inline bool fbuf_needhook(union fbuf_i64 *fbuf_header) {
     return fbuf_header->i_val & 1;
 }
 
-inline intptr_t fbuf_nextbase_get(union fbuf_i64 *ptr) {
+inline int64_t fbuf_nextbase_get(union fbuf_i64 *ptr) {
     return ptr->i_val >> 1;
 }
 
