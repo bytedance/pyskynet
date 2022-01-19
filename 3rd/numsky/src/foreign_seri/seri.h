@@ -42,7 +42,7 @@ union fbuf_i64 {
 };
 
 inline bool fbuf_isbuffer(union fbuf_i64 *fbuf_header) {
-    return (fbuf_header->i_val == 0) || (fbuf_header->i_val & 1 != 0);
+    return (fbuf_header->i_val == 0) || ((fbuf_header->i_val & 1) != 0);
 }
 
 inline bool fbuf_needhook(union fbuf_i64 *fbuf_header) {
@@ -57,16 +57,16 @@ inline void fbuf_lastbase_put(union fbuf_i64 *ptr, int64_t lastbase) {
     ptr->i_val = (lastbase << 1) | 1;
 }
 
-inline void foreign_trash(char *buffer) {
+inline void foreign_unref(char *buffer) {
     union fbuf_i64* p_header = (union fbuf_i64*)buffer;
 	if(fbuf_isbuffer(p_header)) {
         int64_t nextbase = fbuf_nextbase_get(p_header);
-        if(nextbase > 0) {
-            // TODO trash ref pack
+        while(nextbase > 0) {
+            struct skynet_foreign *foreign_base;
+            memcpy(&foreign_base, buffer+nextbase, sizeof(void*));
+            skynet_foreign_decref(foreign_base);
+            nextbase = fbuf_nextbase_get((union fbuf_i64*)(buffer+nextbase+2*sizeof(void*)));
         }
-		skynet_free(buffer);
-	} else {
-		skynet_free(buffer);
 	}
 }
 

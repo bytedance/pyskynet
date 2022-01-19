@@ -34,24 +34,35 @@ static int lpackhook(lua_State *L){
 	}
 }
 
+static int lunref(lua_State *L) {
+	if(lua_islightuserdata(L, 1)) {
+		char * ptr = (char*)lua_touserdata(L,1);
+        foreign_unref(ptr);
+		return 0;
+	} else {
+		return luaL_error(L, "unref must take a lightuserdata");
+	}
+}
+
 static int ltrash(lua_State *L) {
 	if(lua_islightuserdata(L, 1)) {
 		char * ptr = (char*)lua_touserdata(L,1);
-        foreign_trash(ptr);
+        skynet_free(ptr);
 		return 0;
 	} else {
-		return luaL_error(L, "packhook must take a lightuserdata");
+		return luaL_error(L, "trash must take a lightuserdata");
 	}
 }
 
 static const struct luaL_Reg l_methods[] = {
-    { "refpack" , refpack },
-    { "refunpack", refunpack },
+    { "__refpack" , refpack },
+    { "__refunpack", refunpack },
+    { "__unref", lunref},
 
     { "remotepack", remotepack },
     { "remoteunpack", remoteunpack },
 
-    { "packhook", lpackhook},
+    { "__packhook", lpackhook},
     { "trash", ltrash },
 
     { NULL,  NULL },

@@ -41,9 +41,9 @@ def __foreign_dispatch(session, source, argtuple):
     ret = CMD(*argtuple)
     if session != 0:
         if type(ret) == tuple:
-            pyskynet_proto.ret(*foreign_seri.refpack(*ret))
+            pyskynet_proto.ret(*foreign_seri.__refpack(*ret))
         else:
-            pyskynet_proto.ret(*foreign_seri.refpack(ret))
+            pyskynet_proto.ret(*foreign_seri.__refpack(ret))
 
 
 def __foreign_remote_dispatch(session, source, argtuple):
@@ -62,7 +62,7 @@ pyskynet_proto.register_protocol(
         id=PTYPE_FOREIGN,
         name="foreign",
         pack=__dontpackhere,
-        unpack=foreign_seri.refunpack,
+        unpack=foreign_seri.__refunpack,
         dispatch=__foreign_dispatch,
         )
 
@@ -97,11 +97,11 @@ def dispatch(cmd=None, func=None):
 
 
 def call(addr, *args):
-    msg_ptr, msg_size = foreign_seri.refpack(*args)
-    return foreign_seri.refunpack(*pyskynet_proto.rawcall(
+    msg_ptr, msg_size = foreign_seri.__refpack(*args)
+    return foreign_seri.__refunpack(*pyskynet_proto.rawcall(
         addr, PTYPE_FOREIGN, msg_ptr, msg_size))
 
 
 def send(addr, *args):
-    msg_ptr, msg_size = foreign_seri.refpack(*args)
+    msg_ptr, msg_size = foreign_seri.__refpack(*args)
     pyskynet_proto.rawsend(addr, PTYPE_FOREIGN, msg_ptr, msg_size)

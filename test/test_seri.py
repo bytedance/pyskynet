@@ -45,12 +45,12 @@ def turnon_lua():
                     end
                 end)]]
                 foreign.dispatch("echo_remote", function(...)
-                    local msg, sz = foreign_seri.refpack(...)
-                    return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                    local msg, sz = foreign_seri.remotepack(...)
+                    return trash_ret(msg, foreign_seri.remoteunpack(msg, sz))
                 end)
                 foreign.dispatch("echo_remote_hook", function(...)
                     local msg, sz = foreign_seri.remotepack(...)
-                    local hook = foreign_seri.packhook(msg)
+                    local hook = foreign_seri.__packhook(msg)
                     if hook then
                         return trash_ret(hook, foreign_seri.remoteunpack(hook, sz))
                     else
@@ -102,7 +102,7 @@ def check_case(*args):
                     left[i],  type(left[i]),
                     right[i], type(right[i]))
     for name, pack, unpack in [
-            #("foreign", foreign_seri.refpack, foreign_seri.refunpack),
+            ("foreign", foreign_seri.__refpack, foreign_seri.__refunpack),
             ("foreign_remote", foreign_seri.remotepack, foreign_seri.remoteunpack)]:
         # pack to capsule
         msg_ptr, msg_size = pack(*args)
@@ -111,12 +111,13 @@ def check_case(*args):
         check_equal(name, result, args)
         # pack hook to capsule
         msg_ptr, msg_size = pack(*args)
-        hook_ptr = foreign_seri.packhook(msg_ptr)
+        hook_ptr = foreign_seri.__packhook(msg_ptr)
         if hook_ptr:
             result = unpack(hook_ptr, msg_size)
             foreign.trash(hook_ptr)
             check_equal(name, result, args)
         else:
+            foreign_seri.__unref(msg_ptr)
             foreign.trash(msg_ptr)
         # pack to bytes
         #msg_ptr, msg_size = pack(*args)

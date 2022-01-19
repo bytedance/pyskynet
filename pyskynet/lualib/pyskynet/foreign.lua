@@ -20,8 +20,8 @@ foreign.remotepack = assert(foreign_seri.remotepack)
 foreign.remoteunpack = assert(foreign_seri.remoteunpack)
 foreign.trash = assert(foreign_seri.trash)
 
-local refpack = assert(foreign_seri.refpack)
-local refunpack = assert(foreign_seri.refunpack)
+local refpack = assert(foreign_seri.__refpack)
+local refunpack = assert(foreign_seri.__refunpack)
 
 foreign.CMD = setmetatable({}, {
 	__call=function(t, first, ...)

@@ -51,7 +51,7 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     void wb_write(write_block *wb, const void *buf, int64_t sz)
 
     char** foreign_hook(char *buf)
-    void foreign_trash(char *buf)
+    void foreign_unref(char *buf)
 
     cdef enum:
         TYPE_NIL
@@ -289,11 +289,15 @@ def luapack(*args):
 def luaunpack(capsule, size=None):
     return pymode_unpack(MODE_LUA, capsule, size)
 
-def refpack(*args):
+def __refpack(*args):
     return pymode_pack(MODE_FOREIGN_REF, args)
 
-def refunpack(capsule, size=None):
+def __refunpack(capsule, size=None):
     return pymode_unpack(MODE_FOREIGN_REF, capsule, size)
+
+def __unref(capsule):
+    cdef char *ptr = <char*>PyCapsule_GetPointer(capsule, "cptr")
+    foreign_unref(ptr)
 
 def remotepack(*args):
     return pymode_pack(MODE_FOREIGN_REMOTE, args)
@@ -301,7 +305,7 @@ def remotepack(*args):
 def remoteunpack(capsule, size=None):
     return pymode_unpack(MODE_FOREIGN_REMOTE, capsule, size)
 
-def packhook(capsule):
+def __packhook(capsule):
     cdef char *ptr = <char*>PyCapsule_GetPointer(capsule, "cptr")
     cdef char **hookptr = foreign_hook(ptr)
     if hookptr == NULL:
@@ -311,4 +315,5 @@ def packhook(capsule):
 
 def trash(capsule):
     cdef char *ptr = <char*>PyCapsule_GetPointer(capsule, "cptr")
-    foreign_trash(ptr)
+    skynet_free(ptr)
+
