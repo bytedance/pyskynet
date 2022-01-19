@@ -10,7 +10,8 @@ void rb_init(struct read_block * rb, char * buffer, int64_t size, int mode) {
 	rb->ptr = 0;
 	rb->mode = mode;
 	if(mode!=MODE_LUA) {
-		rb->nextbase = ((intptr_t*)rb_read(rb, sizeof(intptr_t)))[0] >> 2;
+		union fbuf_i64 *ptr = (union fbuf_i64*)rb_read(rb, sizeof(union fbuf_i64));
+		rb->nextbase = fbuf_nextbase_get(ptr);
 	}
 }
 
@@ -224,12 +225,12 @@ struct numsky_ndarray* rb_get_nsarr(struct read_block *rb, int nd) {
 			return NULL;
 		}
 		memcpy(&dataptr, v, sizeof(dataptr));
-		intptr_t* pnextbase = (intptr_t*)rb_read(rb, sizeof(intptr_t));
-		if(pnextbase==NULL) {
+		union fbuf_i64* fbuf_ptr = (union fbuf_i64*)rb_read(rb, sizeof(union fbuf_i64));
+		if(fbuf_ptr ==NULL) {
 			numsky_ndarray_destroy(arr);
 			return NULL;
 		}
-		rb->nextbase = pnextbase[0] >> 2;
+		rb->nextbase = fbuf_nextbase_get(fbuf_ptr);
 	} else if (rb->mode==MODE_FOREIGN_REMOTE){
 		numsky_ndarray_autostridecount(arr);
 		// 4. alloc foreign_base
@@ -331,19 +332,6 @@ lrb_unpack_one(lua_State *L, struct read_block *rb, bool in_table) {
 	}
 	}
 	return aheadptr;
-}
-
-char *mode_unhook(int mode, char* buffer) {
-	if(mode == MODE_LUA) {
-		return buffer;
-	} else {
-		intptr_t head = *((intptr_t*)buffer);
-		if((head & 1) != 0) {
-			return buffer;
-		} else {
-			return (char*)(head);
-		}
-	}
 }
 
 int lmode_unpack(int mode, lua_State *L) {

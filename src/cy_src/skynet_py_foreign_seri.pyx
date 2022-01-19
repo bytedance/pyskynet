@@ -38,7 +38,6 @@ cdef extern from "skynet_py_foreign_seri_ext.c":
     # for write
     cdef struct write_block:
         char *buffer
-        intptr_t nextbase
         int64_t len
         int mode
     void wb_init(write_block* wb, int mode)

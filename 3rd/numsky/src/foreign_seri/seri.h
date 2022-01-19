@@ -35,3 +35,56 @@
 #define MODE_LUA 0
 #define MODE_FOREIGN_REF 1
 #define MODE_FOREIGN_REMOTE 2
+
+union fbuf_i64 {
+    int64_t i_val;
+    char *p_val;
+};
+
+inline bool fbuf_isbuffer(union fbuf_i64 *fbuf_header) {
+    return (fbuf_header->i_val == 0) || (fbuf_header->i_val & 1 != 0);
+}
+
+inline bool fbuf_needhook(union fbuf_i64 *fbuf_header) {
+    return fbuf_header->i_val & 1;
+}
+
+inline intptr_t fbuf_nextbase_get(union fbuf_i64 *ptr) {
+    return ptr->i_val >> 1;
+}
+
+inline void fbuf_lastbase_put(union fbuf_i64 *ptr, int64_t lastbase) {
+    ptr->i_val = (lastbase << 1) | 1;
+}
+
+inline void foreign_trash(char *buffer) {
+	if(fbuf_isbuffer((union fbuf_i64*)buffer)) {
+		skynet_free(buffer);
+	} else {
+		// TODO for ref trash
+	}
+}
+
+inline char** foreign_hook(char *buffer) {
+    union fbuf_i64 *p_header = (union fbuf_i64*)buffer;
+	if(fbuf_needhook(p_header)) {
+		union fbuf_i64 *p_hook = skynet_malloc(sizeof(union fbuf_i64));
+        p_hook->p_val = buffer;
+		return (char**)p_hook;
+	} else {
+		return NULL;
+	}
+}
+
+inline char *mode_unhook(int mode, char* buffer) {
+	if(mode == MODE_LUA) {
+		return buffer;
+	} else {
+        union fbuf_i64 *p_header = (union fbuf_i64*)buffer;
+		if(fbuf_isbuffer(p_header)) {
+			return buffer;
+		} else {
+			return p_header->p_val;
+		}
+	}
+}

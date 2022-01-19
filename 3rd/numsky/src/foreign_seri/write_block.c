@@ -27,13 +27,13 @@ void wb_write(struct write_block *wb, const void *buf, int64_t sz) {
 void wb_init(struct write_block *wb, int mode) {
 	const int BLOCK_SIZE = 128;
 	wb->buffer = skynet_malloc(BLOCK_SIZE);
-	wb->nextbase = 0;
+	wb->lastbase = 0;
 	wb->capacity = BLOCK_SIZE;
 	wb->len = 0;
 	wb->mode = mode;
 	if(mode != MODE_LUA) {
 		// set last bit = 1 for diff with pointer (is always even number) when hook
-		intptr_t empty = 1;
+		int64_t empty = 0;
 		wb_push(wb, &empty, sizeof(empty));
 	}
 }
@@ -46,11 +46,11 @@ void wb_free(struct write_block *wb) {
 }
 
 void wb_ref_base(struct write_block *wb, struct skynet_foreign* foreign_base, char *dataptr) {
-	*((intptr_t*)(wb->buffer + wb->nextbase)) = (wb->len << 2) | 3;
+    fbuf_lastbase_put((union fbuf_i64*)(wb->buffer + wb->lastbase), wb->len);
 	wb_push(wb, &(foreign_base), sizeof(foreign_base));
 	wb_push(wb, &(dataptr), sizeof(dataptr));
-	wb->nextbase = wb->len;
-	intptr_t empty = 1;
+	wb->lastbase = wb->len;
+	int64_t empty = 0;
 	wb_push(wb, &empty, sizeof(empty));
 }
 
@@ -317,17 +317,6 @@ lwb_pack_one(lua_State *L, struct write_block *wb, int index, int depth) {
 	default:
 		wb_free(wb);
 		luaL_error(L, "Unsupport type %s to serialize", lua_typename(L, type));
-	}
-}
-
-char** foreign_hook(char *buffer) {
-	intptr_t head = *((intptr_t*)buffer);
-	if((head & 2) != 0) {
-		char ** hookptr = skynet_malloc(sizeof(char*));
-		*hookptr = buffer;
-		return hookptr;
-	} else {
-		return NULL;
 	}
 }
 

@@ -8,7 +8,7 @@
 
 struct write_block {
 	char *buffer;
-	intptr_t nextbase;
+	intptr_t lastbase;
 	int64_t capacity;
 	int64_t len;
 	int mode;
@@ -26,5 +26,4 @@ void wb_put_pointer(struct write_block *wb, void *v);
 void wb_put_string(struct write_block *wb, const char *str, int len);
 void wb_uint(struct write_block* wb, npy_intp v);
 
-char** foreign_hook(char *buffer);
 int lmode_pack(int mode, lua_State *L);
