@@ -127,7 +127,7 @@ end
 
 function foreign.send(addr, ...)
     local msg_ptr, msg_size = foreign_seri.__refpack(...)
-	return safe_rawsend(addr, nil, msg_ptr, msg_size)
+	return safe_rawsend(addr, 0, msg_ptr, msg_size)
 end
 
 return foreign
