@@ -87,6 +87,16 @@ class PySkynetCallException(Exception):
     pass
 
 
+def __wait_session(session):
+    ar = AsyncResult()
+    local_session_to_ar[session] = ar
+    re = ar.get()
+    if re:
+        return re
+    else:
+        gevent.sleep(0.01)
+        raise PySkynetCallException("call failed from %s" % dst)
+
 # skynet.lua
 def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
     """
@@ -96,14 +106,7 @@ def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
     session = skynet_py_mq.csend(dst, psproto.id, None, msg_ptr, msg_size)
     if session is None:
         raise PySkynetCallException("send to invalid address %08x" % dst)
-    ar = AsyncResult()
-    local_session_to_ar[session] = ar
-    re = ar.get()
-    if re:
-        return re
-    else:
-        gevent.sleep(0.01)
-        raise PySkynetCallException("call failed from %s" % dst)
+    return __wait_session(session)
 
 
 # skynet.lua
@@ -161,7 +164,7 @@ def async_handle():
             ar = local_session_to_ar.pop(session)
             ar.set((ptr, length))
         except KeyError as e:
-            hook_print("[ERROR] unknown response session: %d from %x"%(session, address))
+            hook_print("[ERROR] unknown response session: %d from %x"%(session, source))
     else:
         # TODO exception
         try:
@@ -170,7 +173,7 @@ def async_handle():
             if session != 0:
                 skynet_py_mq.csend(source, SKYNET_PTYPE.PTYPE_ERROR, session, "")
             else:
-                hook_print("[ERROR] unknown request with unexcept type_id %s, session: %d from %x"%(type_id, session, address))
+                hook_print("[ERROR] unknown request with unexcept type_id %s, session: %d from %x"%(type_id, session, source))
             return
         co = gevent.getcurrent()
         co_to_remote_session[co] = session

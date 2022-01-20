@@ -1,11 +1,11 @@
 
 import pyskynet.skynet_py_foreign_seri as foreign_seri
 import pyskynet.proto as pyskynet_proto
-import pyskynet.skynet_py_mq
+import pyskynet.skynet_py_mq as skynet_py_mq
 
 
-PTYPE_FOREIGN = pyskynet.skynet_py_mq.PTYPE_FOREIGN
-PTYPE_FOREIGN_REMOTE = pyskynet.skynet_py_mq.PTYPE_FOREIGN_REMOTE
+PTYPE_FOREIGN = skynet_py_mq.PTYPE_FOREIGN
+PTYPE_FOREIGN_REMOTE = skynet_py_mq.PTYPE_FOREIGN_REMOTE
 
 
 class CMDDispatcher(object):
@@ -41,9 +41,16 @@ def __foreign_dispatch(session, source, argtuple):
     ret = CMD(*argtuple)
     if session != 0:
         if type(ret) == tuple:
-            pyskynet_proto.ret(*foreign_seri.__refpack(*ret))
+            msg_ptr, msg_size = foreign_seri.__refpack(*ret)
         else:
-            pyskynet_proto.ret(*foreign_seri.__refpack(ret))
+            msg_ptr, msg_size = foreign_seri.__refpack(ret)
+        hook_ptr = foreign_seri.__packhook(msg_ptr)
+        if hook_ptr:
+            if not pyskynet_proto.ret(hook_ptr, msg_size):
+                foreign_seri.__unref(msg_ptr)
+                foreign_seri.trash(msg_ptr)
+        else:
+            pyskynet_proto.ret(msg_ptr, msg_size)
 
 
 def __foreign_remote_dispatch(session, source, argtuple):
@@ -95,13 +102,28 @@ def dispatch(cmd=None, func=None):
     else:
         raise Exception("dispatch failed for unexception args")
 
+def __safe_rawsend(addr, zero_none, msg_ptr, msg_size):
+    hook_ptr = foreign_seri.__packhook(msg_ptr)
+    if hook_ptr:
+        session = skynet_py_mq.csend(addr, PTYPE_FOREIGN, zero_none, hook_ptr, msg_size)
+        if session is None:
+            foreign_seri.__unref(msg_ptr)
+            foreign_seri.trash(msg_ptr)
+    else:
+        session = skynet_py_mq.csend(addr, PTYPE_FOREIGN, zero_none, msg_ptr, msg_size)
+    return session
+
 
 def call(addr, *args):
     msg_ptr, msg_size = foreign_seri.__refpack(*args)
-    return foreign_seri.__refunpack(*pyskynet_proto.rawcall(
-        addr, PTYPE_FOREIGN, msg_ptr, msg_size))
+    session = __safe_rawsend(addr, None, msg_ptr, msg_size)
+    if session is None:
+        raise psproto.PySkynetCallException("send to invalid address %08x" % dst)
+    re = pyskynet_proto.__wait_session(session)
+    return foreign_seri.__refunpack(*re)
 
 
 def send(addr, *args):
     msg_ptr, msg_size = foreign_seri.__refpack(*args)
-    pyskynet_proto.rawsend(addr, PTYPE_FOREIGN, msg_ptr, msg_size)
+    session = __safe_rawsend(addr, 0, msg_ptr, msg_size)
+    return session is not None
