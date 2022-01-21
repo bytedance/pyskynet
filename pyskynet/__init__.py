@@ -14,20 +14,6 @@ join = pyskynet.boot.join
 boot_config = pyskynet.boot.boot_config
 
 proto = skynet # for compatiable with old code
-#############
-# skynet api #
-#############
-
-PTYPE_TEXT = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_TEXT
-PTYPE_CLIENT = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_CLIENT
-PTYPE_SOCKET = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_SOCKET
-PTYPE_LUA = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_LUA
-PTYPE_FOREIGN_REMOTE = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_FOREIGN_REMOTE
-PTYPE_FOREIGN = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_FOREIGN
-
-pyskynet.rawcall = skynet.rawcall
-pyskynet.rawsend = skynet.rawsend
-pyskynet.ret = skynet.ret
 
 #################
 # env set & get #
@@ -70,14 +56,14 @@ def newservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "newservice's name must be str or bytes"
     for arg in args:
         assert type(arg) == str or type(arg) == bytes, "newservice's arg must be str or bytes"
-    return skynet.call(".launcher", PTYPE_LUA, "LAUNCH", "snlua", service_name, *args)[0]
+    return skynet.call(".launcher", skynet.PTYPE_LUA, "LAUNCH", "snlua", service_name, *args)[0]
 
 
 def uniqueservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "uniqueservice's name must be str or bytes"
     for arg in args:
         assert type(arg) == str or type(arg) == bytes, "uniqueservice's arg must be str or bytes"
-    return skynet.call(".service", PTYPE_LUA, "LAUNCH", service_name, *args)[0]
+    return skynet.call(".service", skynet.PTYPE_LUA, "LAUNCH", service_name, *args)[0]
 
 
 def scriptservice(scriptaddr_or_loadargs, *args):
@@ -120,6 +106,3 @@ def self():
     assert address > 0, "service pyholder not start "
     return address
 
-
-def test(script, *args):
-    return foreign.call(boot.boot_service, "run", script, *args)

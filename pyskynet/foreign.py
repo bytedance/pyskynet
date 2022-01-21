@@ -119,7 +119,7 @@ def call(addr, *args):
     session = __safe_rawsend(addr, None, msg_ptr, msg_size)
     if session is None:
         raise psproto.PySkynetCallException("send to invalid address %08x" % dst)
-    re = skynet.__wait_session(session)
+    re = skynet.__yield_call(addr, session)
     return foreign_seri.__refunpack(*re)
 
 

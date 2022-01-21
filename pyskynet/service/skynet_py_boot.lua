@@ -9,16 +9,6 @@ local foreign = require "pyskynet.foreign"
 ----------------
 local BOOT = {}
 
--- for pyskynet xxx
-function BOOT.run(script, ...)
-    local func, sth = load(script)
-    if not func then
-		error(sth)
-    else
-		return func(...)
-    end
-end
-
 -- for pyskynet repl
 function BOOT.repl(script)
 	local func, err = load("return "..script)
@@ -41,14 +31,7 @@ function BOOT.repl(script)
 end
 
 -- foreign message for boot, command line pyskynet xxx
-skynet.dispatch("foreign", function (session,source,command,...)
-	local f = assert(BOOT[command])
-	if session ~= 0 then
-		skynet.ret(foreign.pack(f(...)))
-	else
-		foreign.CMD(...)
-	end
-end)
+foreign.dispatch(BOOT)
 
 ------------------
 -- HARBOR items --

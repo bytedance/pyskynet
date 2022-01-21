@@ -5,6 +5,11 @@ import gevent
 from gevent.event import AsyncResult
 import traceback
 
+PTYPE_TEXT = skynet_py_mq.SKYNET_PTYPE.PTYPE_TEXT
+PTYPE_CLIENT = skynet_py_mq.SKYNET_PTYPE.PTYPE_CLIENT
+PTYPE_SOCKET = skynet_py_mq.SKYNET_PTYPE.PTYPE_SOCKET
+PTYPE_LUA = skynet_py_mq.SKYNET_PTYPE.PTYPE_LUA
+
 SKYNET_PTYPE = skynet_py_mq.SKYNET_PTYPE
 
 #####################
@@ -87,7 +92,7 @@ class PySkynetCallException(Exception):
     pass
 
 
-def __wait_session(session):
+def __yield_call(addr, session):
     ar = AsyncResult()
     local_session_to_ar[session] = ar
     re = ar.get()
@@ -95,7 +100,7 @@ def __wait_session(session):
         return re
     else:
         gevent.sleep(0.01)
-        raise PySkynetCallException("call failed from %s" % dst)
+        raise PySkynetCallException("call failed from %s" % addr)
 
 # skynet.lua
 def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
@@ -106,7 +111,7 @@ def rawcall(dst, type_name_or_id, msg_ptr, msg_size):
     session = skynet_py_mq.csend(dst, psproto.id, None, msg_ptr, msg_size)
     if session is None:
         raise PySkynetCallException("send to invalid address %08x" % dst)
-    return __wait_session(session)
+    return __yield_call(dst, session)
 
 
 # skynet.lua

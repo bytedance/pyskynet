@@ -9,21 +9,6 @@ pyskynet.skynet = skynet
 
 pyskynet.start = skynet.start
 
-----------------
--- proto api ---
-----------------
-
-pyskynet.PTYPE_TEXT = skynet.PTYPE_TEXT
-pyskynet.PTYPE_CLIENT = skynet.PTYPE_CLIENT
-pyskynet.PTYPE_SOCKET = skynet.PTYPE_SOCKET
-pyskynet.PTYPE_LUA = skynet.PTYPE_LUA
-pyskynet.PTYPE_FOREIGN_REMOTE = foreign.PTYPE_FOREIGN_REMOTE
-pyskynet.PTYPE_FOREIGN = foreign.PTYPE_FOREIGN
-
-pyskynet.rawcall = skynet.rawcall
-pyskynet.rawsend = skynet.rawsend
-pyskynet.ret = skynet.ret
-
 ------------------
 -- service api ---
 ------------------
@@ -32,12 +17,16 @@ pyskynet.self = skynet.self
 
 function pyskynet.getenv(k)
 	local data = pyskynet_modify.getlenv(k)
-	return (foreign.remoteunpack(data))
+    if data == nil then
+        return nil
+    else
+        return (foreign.remoteunpack(data))
+    end
 end
 
 function pyskynet.setenv(k, v)
 	if k ~= nil then
-		assert(pyskynet.getenv(k) == nil, "Can't setenv exist key : " .. k)
+		assert(pyskynet_modify.getlenv(k) == nil, "Can't setenv exist key : " .. k)
 	end
 	local msg_ptr, msg_size = foreign.remotepack(v)
 	local newkey = pyskynet_modify.setlenv(k, msg_ptr, msg_size)

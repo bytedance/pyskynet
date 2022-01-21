@@ -113,6 +113,7 @@ class PTYPEEnum(object):
         self.PTYPE_FOREIGN_REMOTE=PTYPE_FOREIGN_REMOTE
         self.PTYPE_TAG_ALLOCSESSION=PTYPE_TAG_ALLOCSESSION
         self.PTYPE_TAG_DONTCOPY=PTYPE_TAG_DONTCOPY
+        self.PTYPE_DECREF_PYTHON=PTYPE_DECREF_PYTHON
 
 
 SKYNET_PTYPE_id_to_name = {}
@@ -125,17 +126,3 @@ for key, id in SKYNET_PTYPE.__dict__.items():
     SKYNET_PTYPE_name_to_id[name] = id
     locals()[key] = id
 
-
-SKYNET_PTYPE_user_builtin_ids = [SKYNET_PTYPE.PTYPE_LUA, SKYNET_PTYPE.PTYPE_CLIENT, SKYNET_PTYPE.PTYPE_SOCKET, SKYNET_PTYPE.PTYPE_TEXT, SKYNET_PTYPE.PTYPE_FOREIGN, SKYNET_PTYPE.PTYPE_FOREIGN_REMOTE]
-def user_assert_id_name(id, name):
-    is_builtin = False
-    if name in SKYNET_PTYPE_name_to_id:
-        assert id == SKYNET_PTYPE_name_to_id[name], "skynet proto type name=%s must bind id=%s" % (name, id)
-        is_builtin = True
-    if id in SKYNET_PTYPE_id_to_name:
-        assert name == SKYNET_PTYPE_id_to_name[id], "skynet proto type id=%s must bind name=%s" % (id, name)
-        is_builtin = True
-    if is_builtin:
-        assert id in SKYNET_PTYPE_user_builtin_ids, "skynet proto can only register builtin proto 'lua' or 'client' or 'socket' or 'text' or 'foreign' or 'foreign_remote', but get name=%s" % name
-
-    assert 0 <= id and id <= 255, "skynet proto type id must be less than 256 but get id=%s" % id
