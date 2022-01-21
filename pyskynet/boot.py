@@ -14,7 +14,7 @@ import pyskynet.skynet_py_main as skynet_py_main
 sys.setdlopenflags(flags)
 
 # 3. some module
-import pyskynet.proto as pyskynet_proto
+import pyskynet.skynet as skynet
 import pyskynet.skynet_py_mq as skynet_py_mq
 
 __boot_event = gevent.event.Event()
@@ -35,8 +35,8 @@ def __first_msg_callback():
     assert type_id == 0, "first message type must be 0 but get %s" % type_id
     assert session == 0, "first message session must be 0 but get %s" % session
     boot_service, = pyskynet.skynet_py_foreign_seri.luaunpack(ptr, length)
-    __watcher.callback = lambda: gevent.spawn(pyskynet_proto.async_handle)
-    gevent.spawn(pyskynet_proto.async_handle)
+    __watcher.callback = lambda: gevent.spawn(skynet.__async_handle)
+    gevent.spawn(skynet.__async_handle)
     __boot_event.set()
 
 
@@ -144,8 +144,8 @@ def main():
                 script = fo.read()
             pyskynet.scriptservice([script, args.script], *args.args)
             join()
-        except pyskynet.proto.PySkynetCallException as err:
-            pyskynet_proto.hook_print(err)
+        except skynet.PySkynetCallException as err:
+            skynet.hook_print(err)
             gevent.sleep(1)
         except KeyboardInterrupt:
             return

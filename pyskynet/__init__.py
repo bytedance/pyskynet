@@ -6,15 +6,16 @@ import pyskynet.boot
 import pyskynet.skynet_py_mq
 import pyskynet.foreign as foreign
 import pyskynet.skynet_py_main as skynet_py_main
-import pyskynet.proto as pyskynet_proto
+import pyskynet.skynet as skynet
 
 __version__ = '0.1.5'
 start = pyskynet.boot.start
 join = pyskynet.boot.join
 boot_config = pyskynet.boot.boot_config
 
+proto = skynet # for compatiable with old code
 #############
-# proto api #
+# skynet api #
 #############
 
 PTYPE_TEXT = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_TEXT
@@ -24,9 +25,9 @@ PTYPE_LUA = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_LUA
 PTYPE_FOREIGN_REMOTE = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_FOREIGN_REMOTE
 PTYPE_FOREIGN = pyskynet.skynet_py_mq.SKYNET_PTYPE.PTYPE_FOREIGN
 
-pyskynet.rawcall = pyskynet_proto.rawcall
-pyskynet.rawsend = pyskynet_proto.rawsend
-pyskynet.ret = pyskynet_proto.ret
+pyskynet.rawcall = skynet.rawcall
+pyskynet.rawsend = skynet.rawsend
+pyskynet.ret = skynet.ret
 
 #################
 # env set & get #
@@ -69,14 +70,14 @@ def newservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "newservice's name must be str or bytes"
     for arg in args:
         assert type(arg) == str or type(arg) == bytes, "newservice's arg must be str or bytes"
-    return pyskynet_proto.call(".launcher", PTYPE_LUA, "LAUNCH", "snlua", service_name, *args)[0]
+    return skynet.call(".launcher", PTYPE_LUA, "LAUNCH", "snlua", service_name, *args)[0]
 
 
 def uniqueservice(service_name, *args):
     assert type(service_name) == str or type(service_name) == bytes, "uniqueservice's name must be str or bytes"
     for arg in args:
         assert type(arg) == str or type(arg) == bytes, "uniqueservice's arg must be str or bytes"
-    return pyskynet_proto.call(".service", PTYPE_LUA, "LAUNCH", service_name, *args)[0]
+    return skynet.call(".service", PTYPE_LUA, "LAUNCH", service_name, *args)[0]
 
 
 def scriptservice(scriptaddr_or_loadargs, *args):
@@ -99,18 +100,18 @@ class __CanvasService(object):
         self.service = service
 
     def reset(self, *args):
-        return pyskynet_proto.call(self.service, PTYPE_FOREIGN, "reset", *args)
+        return foreign.call(self.service, "reset", *args)
 
     def render(self, *args):
-        return pyskynet_proto.call(self.service, PTYPE_FOREIGN, "render", *args)
+        return foreign.call(self.service, "render", *args)
 
     def __del__(self):
-        return pyskynet_proto.send(self.service, PTYPE_FOREIGN, "exit")
+        return foreign.send(self.service, "exit")
 
 
 def canvas(script, name="unknowxml"):
     canvas_service = newservice("canvas_service")
-    pyskynet_proto.call(canvas_service, PTYPE_FOREIGN, "init", script, name)
+    foreign.call(canvas_service, "init", script, name)
     return __CanvasService(canvas_service)
 
 
@@ -121,5 +122,4 @@ def self():
 
 
 def test(script, *args):
-    import pyskynet.foreign
-    return pyskynet.foreign.call(boot.boot_service, "run", script, *args)
+    return foreign.call(boot.boot_service, "run", script, *args)

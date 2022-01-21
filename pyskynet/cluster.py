@@ -3,7 +3,7 @@
 import pyskynet
 
 import pyskynet.boot
-import pyskynet.proto as pyskynet_proto
+import pyskynet.skynet as skynet
 from pyskynet.skynet_py_foreign_seri import remotepack, remoteunpack, luapack
 import gevent
 import gevent.event
@@ -23,13 +23,13 @@ node_to_task_queue = {}
 
 
 def __request_sender(task_queue, node):
-    sender = pyskynet_proto.call(clusterd, "lua", "sender", node)[0]
+    sender = skynet.call(clusterd, "lua", "sender", node)[0]
     i = 0
     while i < len(task_queue):
         task = task_queue[i]
         # tuple for send task, AsyncResult for call task
         if type(task) == tuple:
-            pyskynet_proto.send(sender, "lua", "push", task[0], remotepack(*task[1]))
+            skynet.send(sender, "lua", "push", task[0], remotepack(*task[1]))
         else:
             confirm = gevent.event.Event()
             task.set((confirm, sender))
@@ -58,7 +58,7 @@ def __get_sender(node):
 
 
 def call(node, address, *args):
-    return remoteunpack(*pyskynet_proto.rawcall(
+    return remoteunpack(*skynet.rawcall(
         __get_sender(node), "lua", *luapack("req", address, *remotepack(*args))))
 
 
@@ -67,9 +67,9 @@ def send(node, address, *args):
     if sender is None:
         node_to_task_queue[node].append((address, args))
     else:
-        pyskynet_proto.send(sender, "lua", "push", address, remotepack(*args))
+        skynet.send(sender, "lua", "push", address, remotepack(*args))
 
 
 def open(port):
     assert 0 <= port <= 65535, "cluster.open's port must be in [0, 65535]"
-    pyskynet_proto.call(clusterd, "lua", "listen", "0.0.0.0", port)
+    skynet.call(clusterd, "lua", "listen", "0.0.0.0", port)

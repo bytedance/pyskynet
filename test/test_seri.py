@@ -31,19 +31,19 @@ def turnon_lua():
                 foreign.dispatch("echo", function(...)
                     return ...
                 end)
-                --[[foreign.dispatch("echo_ref", function(...)
-                    local msg, sz = foreign_seri.refpack(...)
-                    return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                foreign.dispatch("echo_ref", function(...)
+                    local msg, sz = foreign_seri.__refpack(...)
+                    return trash_ret(msg, foreign_seri.__refunpack(msg, sz))
                 end)
                 foreign.dispatch("echo_ref_hook", function(...)
-                    local msg, sz = foreign_seri.refpack(...)
-                    local hook = foreign_seri.packhook(msg)
+                    local msg, sz = foreign_seri.__refpack(...)
+                    local hook = foreign_seri.__packhook(msg)
                     if hook then
-                        return trash_ret(hook, foreign_seri.refunpack(hook, sz))
+                        return trash_ret(hook, foreign_seri.__refunpack(hook, sz))
                     else
-                        return trash_ret(msg, foreign_seri.refunpack(msg, sz))
+                        return trash_ret(msg, foreign_seri.__refunpack(msg, sz))
                     end
-                end)]]
+                end)
                 foreign.dispatch("echo_remote", function(...)
                     local msg, sz = foreign_seri.remotepack(...)
                     return trash_ret(msg, foreign_seri.remoteunpack(msg, sz))
@@ -125,7 +125,7 @@ def check_case(*args):
         #result = unpack(msg_bytes)
         #check_equal(name, result, args)
     if echo_service:
-        for name in ["echo", "echo_remote", "echo_remote_hook"]:
+        for name in ["echo", "echo_ref", "echo_ref_hook", "echo_remote", "echo_remote_hook"]:
             result = foreign.call(echo_service, name, *args)
             check_equal(name, result, args)
     result = foreign.call(".python", "echo", *args)

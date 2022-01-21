@@ -5,6 +5,7 @@ local pyskynet_modify = require("pyskynet.modify")
 
 local pyskynet = {}
 pyskynet.foreign = foreign
+pyskynet.skynet = skynet
 
 pyskynet.start = skynet.start
 

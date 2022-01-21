@@ -1,6 +1,6 @@
 
 import pyskynet.skynet_py_foreign_seri as foreign_seri
-import pyskynet.proto as pyskynet_proto
+import pyskynet.skynet as skynet
 import pyskynet.skynet_py_mq as skynet_py_mq
 
 
@@ -46,26 +46,26 @@ def __foreign_dispatch(session, source, argtuple):
             msg_ptr, msg_size = foreign_seri.__refpack(ret)
         hook_ptr = foreign_seri.__packhook(msg_ptr)
         if hook_ptr:
-            if not pyskynet_proto.ret(hook_ptr, msg_size):
+            if not skynet.ret(hook_ptr, msg_size):
                 foreign_seri.__unref(msg_ptr)
                 foreign_seri.trash(msg_ptr)
         else:
-            pyskynet_proto.ret(msg_ptr, msg_size)
+            skynet.ret(msg_ptr, msg_size)
 
 
 def __foreign_remote_dispatch(session, source, argtuple):
     ret = CMD(*argtuple)
     if session != 0:
         if type(ret) == tuple:
-            pyskynet_proto.ret(*foreign_seri.remotepack(*ret))
+            skynet.ret(*foreign_seri.remotepack(*ret))
         else:
-            pyskynet_proto.ret(*foreign_seri.remotepack(ret))
+            skynet.ret(*foreign_seri.remotepack(ret))
 
 def __dontpackhere():
-    raise pyskynet_proto.PySkynetCallException("don't use pack here")
+    raise skynet.PySkynetCallException("don't use pack here")
 
 # dispatch foreign message
-pyskynet_proto.register_protocol(
+skynet.register_protocol(
         id=PTYPE_FOREIGN,
         name="foreign",
         pack=__dontpackhere,
@@ -74,7 +74,7 @@ pyskynet_proto.register_protocol(
         )
 
 # dispatch foreign message
-pyskynet_proto.register_protocol(
+skynet.register_protocol(
         id=PTYPE_FOREIGN_REMOTE,
         name="foreign_remote",
         pack=__dontpackhere,
@@ -119,7 +119,7 @@ def call(addr, *args):
     session = __safe_rawsend(addr, None, msg_ptr, msg_size)
     if session is None:
         raise psproto.PySkynetCallException("send to invalid address %08x" % dst)
-    re = pyskynet_proto.__wait_session(session)
+    re = skynet.__wait_session(session)
     return foreign_seri.__refunpack(*re)
 
 
