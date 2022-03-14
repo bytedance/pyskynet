@@ -10,19 +10,6 @@ Default install, find ssl by default. If ssl is not found, ltls.so will not be i
 $ pip install pyskynet
 ~~~~
 
-Install with specific ssl path.
-
-~~~~sh
-$ pip install pyskynet --install-option="--ssl=/path/to"
-~~~~
-
-In mac maybe:
-
-~~~~sh
-$ brew install openssl
-$ pip install pyskynet --install-option="--ssl=/usr/local/opt/openssl@1.1"
-~~~~
-
 ### Quick Start
 
 Call lua from python
