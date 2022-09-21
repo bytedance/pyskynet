@@ -2,6 +2,8 @@
 
 PySkynet is a library for using [skynet](https://github.com/cloudwu/skynet) in python. Including a lua library *numsky* for dealing with numpy.ndarray object.
 
+This repository has been archived for some reason. There's a personal fork [pyskynet](https://github.com/drinkwithwater/pyskynet).
+
 ### Install
 
 Default install, find ssl by default. If ssl is not found, ltls.so will not be installed
